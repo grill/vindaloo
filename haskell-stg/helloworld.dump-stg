@@ -1,0 +1,13 @@
+sat_sim :: GHC.Base.String
+[LclId] =
+    \u srt:(0,*bitmap*) [] GHC.CString.unpackCString# "Hello, World!";
+SRT(sat_sim): [GHC.CString.unpackCString#]
+Main.main :: GHC.Types.IO ()
+[GblId] =
+    \u srt:(0,*bitmap*) [] System.IO.putStrLn sat_sim;
+SRT(Main.main): [System.IO.putStrLn, sat_sim]
+:Main.main :: GHC.Types.IO ()
+[GblId] =
+    \u srt:(0,*bitmap*) [] GHC.TopHandler.runMainIO Main.main;
+SRT(:Main.main): [GHC.TopHandler.runMainIO, Main.main]
+
