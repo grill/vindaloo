@@ -85,28 +85,17 @@ and Expr = LetE of Let
          | ConstrApplE of ConstrAppl
          | PrimApplE of PrimAppl
          | LiteralE of Literal
-and AlgebraicAlt = {
-    case : ConstrAppl
+and DefaultAlt = {
+    var : Var option
     body : Expr
 }
-and PrimitiveAlt = {
-    case : Literal
-    body : Expr
-}
-and SimpleDefaultAlt = {
-    body : Expr
-}
-and VarDefaultAlt = {
-    var : Var
-    body : Expr
-}
-and DefaultAlt = SimpleDefault of SimpleDefaultAlt | VarDefault of VarDefaultAlt
 and AlgebraicAltList = {
-    alts : List<AlgebraicAlt>
+    cases : Map<ConstrAppl, Expr>
     def : DefaultAlt
 }
 and PrimitiveAltList = {
-    alts : List<PrimitiveAlt>
+    cases : Map<Literal, Expr>
     def : DefaultAlt
 }
+and Continuation = ConstrContinuation | PrimContinuation
 and Alts = AlgebraicAlts of AlgebraicAltList | PrimitiveAlts of PrimitiveAltList
