@@ -185,14 +185,13 @@ let ``compose`` () =
 
 [<Fact>]
 let ``map`` () =
-    test binds """
-map = {} \n {f,xs} ->
+    test binds """ 
+    map = {} \n {f,xs} ->
     case xs of
         Nil {} -> Nil {};
         Cons {y,ys} -> let fy = {f,y} \u {} -> f {y};
                            mfy = {f,ys} \u {} -> map {f,ys}
-                       in Cons {fy,mfy}
-    """ |> should equal true
+                       in Cons {fy,mfy}""" |> should equal true
 
 [<Fact>]
 let ``map1`` () =
