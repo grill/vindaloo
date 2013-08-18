@@ -9,19 +9,37 @@ open Vindaloo.Parser
 
 let test p str =
     match run p str with
-    | Success(result, _, _)   -> printfn "Success: %A" result
-    | Failure(errorMsg, _, _) -> printfn "Failure: %s" errorMsg
+    | Success(result, _, _)   -> printfn "Success: %A" result; true
+    | Failure(errorMsg, _, _) -> printfn "Failure: %s" errorMsg; false
 
-let one = 1
-
+//literal
 [<Fact>]
-let ``one is one`` () = one |> should equal 1
-
+let ``primitve`` () = test literal "2#" |> should equal true
 [<Fact>]
-let ``two is two`` () = 2 |> should equal 2
+let ``wrong primitive`` () = test literal "2" |> should equal false
 
+//primitive operation
 [<Fact>]
-let ``bla`` () = one |> should equal 1
+let ``primitve op`` () = test prim "-#" |> should equal true
+[<Fact>]
+let ``wrong primitive op`` () = test prim "2+" |> should equal false
+
+//variable
+[<Fact>]
+let ``identifier`` () = test var "_Asdfs" |> should equal true
+[<Fact>]
+let ``wrong identifier`` () = test var "1" |> should equal false
+
+//list of vars
+[<Fact>]
+let ``list of vars`` () = test vars "{_Asdfs,  asdf,Asdf,sdf}" |> should equal true
+[<Fact>]
+let ``empty list of vars`` () = test vars "{}" |> should equal true
+[<Fact>]
+let ``a list of vars which was not closed`` () = test vars "{asdf, asdf" |> should equal false
+
+
+(* Test Input for Vindaloo *)
 
 (*
   add = \a b ->
