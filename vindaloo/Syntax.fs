@@ -40,9 +40,10 @@ Atom: atom --> var | literal
 *)
 
 type Bindings = Map<Var, LambdaForm>
+and Updateable = bool
 and LambdaForm = {
     freeVars : Vars;
-    updateable : bool;
+    updateable : Updateable;
     parameters : Vars;
     body : Expr;
 }
@@ -50,7 +51,7 @@ and Operator = int -> int -> int
 and Vars = List<Var>
 and Var = string
 and Literal = int
-and Atom = VarAtom of Var | LiteralAtom of Literal
+and Atom = VarA of Var | LiteralA of Literal
 and Atoms = Atom list
 and Constr = string
 and Let = {
@@ -67,15 +68,15 @@ and Case = {
 }
 and Appl = {
     var : Var
-    pars : List<Atom>
+    pars : Atoms
 }
 and ConstrAppl = {
     constr : Constr
-    pars : List<Atom>
+    pars : Atoms
 }
 and PrimAppl = {
-    fu : int -> int -> int
-    pars : List<Atom>
+    op : Operator
+    pars : Atoms
 }
 and Expr = LetE of Let
          | LetrecE of Letrec
