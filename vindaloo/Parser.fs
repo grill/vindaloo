@@ -128,7 +128,7 @@ do exprImpl :=
     (literal |>> LiteralE)
 
 //Program: prog --> binds
-let prog = binds
+let prog = ws >>. binds .>> ws
 
 (** Syntax of the STG language **
 
