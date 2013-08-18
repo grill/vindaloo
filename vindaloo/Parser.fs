@@ -97,7 +97,7 @@ let letrec : Parser<Expr, unit> =
 
 let case : Parser<Expr, unit> =
    str "case" >>. expr .>> ws .>> str "of" .>> ws .>>. alts |>>
-    fun (expr, alts) -> PrimApplE {expr = expr; alts = alts}
+    fun (expr, alts) -> CaseE {expr = expr; alts = alts}
 
 //Default alt: default --> var -> expr
 //                      | default -> expr
