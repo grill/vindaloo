@@ -51,6 +51,7 @@ and Vars = List<Var>
 and Var = string
 and Literal = int
 and Atom = VarAtom of Var | LiteralAtom of Literal
+and Atoms = Atom list
 and Constr = string
 and Let = {
     binds : Bindings
@@ -76,7 +77,13 @@ and PrimAppl = {
     fu : int -> int -> int
     pars : List<Atom>
 }
-and Expr = Let | Letrec | Case | Appl | ConstrAppl | PrimAppl | Literal
+and Expr = LetE of Let
+         | LetrecE of Letrec
+         | CaseE of Case
+         | ApplE of Appl
+         | ConstrApplE of ConstrAppl
+         | PrimApplE of PrimAppl
+         | LiteralE of Literal
 and AAlt = {
     case : ConstrAppl
     body : Expr
