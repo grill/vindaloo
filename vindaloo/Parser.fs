@@ -7,7 +7,7 @@ let ws = spaces
 let str = pstring
 
 //Literals: literal --> 0# | 1# | ...
-let literal : Parser<uint64, unit> = puint64 .>> str "#"
+let literal : Parser<Literal, unit> = pint32 .>> str "#"
 
 //Primitive ops: prim --> +# | -# | *# | /#
 let prim : Parser<Operator, unit> =
@@ -17,7 +17,7 @@ let prim : Parser<Operator, unit> =
     (str "/#" >>. preturn(/))
 
 let isAsciiIdStart = fun c -> isAsciiLetter c || c = '_'
-let var : Parser<string, unit> =
+let var : Parser<Var, unit> =
     identifier (IdentifierOptions(isAsciiIdStart = isAsciiIdStart))
 
 //Variable lists: vars --> {var(1), ... , var(n)}    n >= 0
@@ -27,7 +27,7 @@ let vars : Parser<Vars, unit> = between (str "{") (str "}") (
     )
 
 //Atom: atom --> var | literal
-//let atom = var <|> literal
+let atom : Parser<Atom, unit> = var <|> literal
 
 //Atom lists: atoms --> {atom(1), ..., atom(n)}    n >= 0
 //let atoms = between (str "{") (str "}") (sepBy atom (str ","))

@@ -38,6 +38,15 @@ let ``empty list of vars`` () = test vars "{}" |> should equal true
 [<Fact>]
 let ``a list of vars which was not closed`` () = test vars "{asdf, asdf" |> should equal false
 
+//atom
+[<Fact>]
+let ``identifier - atom`` () = test var "_Asdfs" |> should equal true
+[<Fact>]
+let ``wrong identifier - atom`` () = test var "1" |> should equal false
+[<Fact>]
+let ``primitve op - atom`` () = test prim "-#" |> should equal true
+[<Fact>]
+let ``wrong primitive op - atom`` () = test prim "2+" |> should equal false
 
 (* Test Input for Vindaloo *)
 
