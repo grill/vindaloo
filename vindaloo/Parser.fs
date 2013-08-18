@@ -44,9 +44,9 @@ let appl : Parser<Expr, unit> =
 let isConstrStart c = isAsciiUpper c
 let constr : Parser<Constr, unit> =
     identifier (IdentifierOptions(isAsciiIdStart = isConstrStart))
-let constrAppl : Parser<Expr, unit> =
+let constrAppl : Parser<ConstrAppl, unit> =
     constr .>> ws .>>. atoms |>>
-    fun (constr, pars) -> ConstrApplE { constr = constr; pars = pars }
+    fun (constr, pars) -> { constr = constr; pars = pars }
 
 let primAppl : Parser<Expr, unit> =
     prim .>> ws .>>. atoms |>>
@@ -59,14 +59,8 @@ let primAppl : Parser<Expr, unit> =
 //                  | constr atoms
 //                  | prim atoms
 //                  | literal
-let expr : Parser<Expr, unit> =
-    (letBinds) <|>
-    (letrec) <|>
-    (case) <|>
-    (appl) <|>
-    (constrAppl) <|>
-    (primAppl) <|>
-    (literal |>> LiteralE)
+//forward declare it here so it can be used in patterns
+let expr, exprImpl = createParserForwardedToRef()
 
 //Update flag: pi --> u | n
 let pi : Parser<Updateable, unit> =
@@ -95,23 +89,43 @@ let letrec : Parser<Expr, unit> =
     str "letrec" >>. exprBinds |>>
     fun (binds, expr) -> LetrecE {binds = binds; expr = expr}
 
+//Default alt: default --> var -> expr
+//                      | default -> expr
+let dalt : Parser<DefaultAlt, unit> =
+    (str "default" |>> (fun _ -> None) <|> (var |>> Some)) .>> ``->`` .>>. expr
+        |>> fun (var, expr) -> {var=var; body=expr}
+
+
+//generic matching alternative
+let galt x = x .>> ``->`` .>>. expr
+
+//Primitive alt: palt --> literal -> expr
+let palt = galt literal
+
+//Algebraic alt: aalt --> constr vars -> expr
+let aalt = galt constrAppl
+
+//Alternatives: alts --> aalt(1); ... ; aalt(n); default    n >= 0 (Algebraic)
+//                   | palt(1); ... ; palt(n); default    n >= 0 (Primitive)
+let galts xalt = sepEndBy xalt (str ";") .>> ws .>>. dalt
+                 |>> fun (alts, def) -> {cases = Map.ofList alts; def = def}
+let alts : Parser<Alts, unit> =
+    (galts palt |>> PrimitiveAlts) <|> (galts aalt |>> AlgebraicAlts)
+
+//case
 let case : Parser<Expr, unit> =
     str "case" >>. expr .>> ws .>> str "of" .>> ws .>>. alts |>>
     fun (expr, alts) -> CaseE {expr = expr; alts = alts}
 
-//Default alt: default --> var -> expr
-//                      | default -> expr
-//let dalt = (str "default" <|> var) .>> ``->`` .>>. expr
-
-//Primitive alt: palt --> literal -> expr
-//let palt = literal .>> ``->`` .>>. expr
-
-//Algebraic alt: aalt --> constr vars -> expr
-//let aalt = constr >>. vars .>> ``->`` .>>. expr
-
-//Alternatives: alts --> aalt(1); ... ; aalt(n); default    n >= 0 (Algebraic)
-//                   | palt(1); ... ; palt(n); default    n >= 0 (Primitive)
-//let alts = (sepEndBy aalt (str ";")  <|> sepEndBy palt (str ";")) .>> ws .>>. dalt
+//expr is implemented here
+do exprImpl :=
+    (letBinds) <|>
+    (letrec) <|>
+    (case) <|>
+    (appl) <|>
+    (constrAppl |>> ConstrApplE) <|>
+    (primAppl) <|>
+    (literal |>> LiteralE)
 
 //Program: prog --> binds
 let prog = binds

@@ -90,13 +90,10 @@ and DefaultAlt = {
     var : Var option
     body : Expr
 }
-and AlgebraicAltList = {
-    cases : Map<ConstrAppl, Expr>
+and AltList<'a when 'a:comparison> = {
+    cases : Map<'a, Expr>
     def : DefaultAlt
 }
-and PrimitiveAltList = {
-    cases : Map<Literal, Expr>
-    def : DefaultAlt
-}
-and Continuation = ConstrContinuation | PrimContinuation
+and AlgebraicAltList = AltList<ConstrAppl>
+and PrimitiveAltList = AltList<Literal>
 and Alts = AlgebraicAlts of AlgebraicAltList | PrimitiveAlts of PrimitiveAltList
