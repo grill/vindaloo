@@ -2,3 +2,5 @@ packages/**
 vindaloo/bin/**
 vindaloo/obj/**
 TestResults/**
+/*.v11.suo
+/*.pdf
