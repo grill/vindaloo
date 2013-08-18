@@ -76,7 +76,7 @@ let lf : Parser<LambdaForm, unit> =
 //Bindings: binds --> var(1) = lf(1); ... ; var(n) = lf(n)    n >= 1
 let binding : Parser<Binding, unit> = var .>> ws .>> str "=" .>> ws .>>. lf .>> ws
    //(pipe2 (binding .>>? str ";") (sepBy binding (str ";")) List.Cons) |> Map.ofList
-let binds : Parser<Bindings, unit> = sepBy1 binding (str ";" .>> ws) |>> Map.ofList
+let binds : Parser<Bindings, unit> = ws >>. sepBy1 binding (str ";" .>> ws) |>> Map.ofList
 
 let exprBinds : Parser<Bindings * Expr, unit> = 
     binds .>> ws .>> str "in" .>> ws .>>. expr
@@ -128,7 +128,7 @@ do exprImpl :=
     (literal |>> LiteralE)
 
 //Program: prog --> binds
-let prog = ws >>. binds .>> ws
+let prog = binds
 
 (** Syntax of the STG language **
 
