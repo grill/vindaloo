@@ -40,6 +40,7 @@ Atom: atom --> var | literal
 *)
 
 type Bindings = Map<Var, LambdaForm>
+and Binding = Var * LambdaForm
 and Updateable = bool
 and LambdaForm = {
     freeVars : Vars;

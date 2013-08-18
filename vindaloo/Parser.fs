@@ -5,20 +5,22 @@ open Vindaloo.Syntax
 
 let ws = spaces
 let str = pstring
-let list p = between (str "{") (str "}") (
+let list p =
+    between (str "{") (str "}") (
        ((sepBy (p .>> ws) (str "," .>> ws))) <|>
        (ws >>. preturn(List.empty))
     )
+let ``->`` = ws .>> str "->" .>> ws
 
 //Literals: literal --> 0# | 1# | ...
 let literal : Parser<Literal, unit> = pint32 .>> str "#"
 
 //Primitive ops: prim --> +# | -# | *# | /#
 let prim : Parser<Operator, unit> =
-    (str "+#" >>. preturn(+)) <|>
-    (str "-#" >>. preturn(-)) <|>
-    (str "*#" >>. preturn(*)) <|>
-    (str "/#" >>. preturn(/))
+    (str "+#" >>% (+)) <|>
+    (str "-#" >>% (-)) <|>
+    (str "*#" >>% (*)) <|>
+    (str "/#" >>% (/))
 
 let isVarStart c = isAsciiLower c
 let var : Parser<Var, unit> =
@@ -34,15 +36,6 @@ let atom : Parser<Atom, unit> =
 
 //Atom lists: atoms --> {atom(1), ..., atom(n)}    n >= 0
 let atoms : Parser<Atoms, unit> = list atom
-
-//Bindings: binds --> var(1) = lf(1); ... ; var(n) = lf(n)    n >= 1
-//let bind = var .>> ws .>> str "=" .>> ws .>>. lf .>> ws
-//let binds = bind .>>? str ";" .>>. sepBy bind (str ";")
-
-//Update flag: pi --> u | n
-let pi : Parser<Updateable, unit> =
-    (str "u" >>. preturn(true)) <|>
-    (str "n" >>. preturn(false))
 
 let appl : Parser<Expr, unit> =
     var .>> ws .>>. atoms |>>
@@ -66,22 +59,45 @@ let primAppl : Parser<Expr, unit> =
 //                  | constr atoms
 //                  | prim atoms
 //                  | literal
-
 let expr : Parser<Expr, unit> =
-//    (str "let" >>. binds .>> ws .>> str "in" .>> ws .>> expr) <|>
-//    (str "letrec" >>. binds .>> ws .>> str "in" .>> ws .>> expr) <|>
-//    (str "case" >>. expr .>> ws .>> str "of" .>> ws .>> alts) <|>
+    (letBinds) <|>
+    (letrec) <|>
+    (case) <|>
     (appl) <|>
     (constrAppl) <|>
     (primAppl) <|>
     (literal |>> LiteralE)
-    
 
-//let ``->`` = ws .>> str "->" .>> ws
+//Update flag: pi --> u | n
+let pi : Parser<Updateable, unit> =
+    (str "\\u" >>% true) <|>
+    (str "\\n" >>% false)
 
 //Lambda-forms: lf --> vars(f) \pi vars(a) -> expr
-//let lf : Parser<LambdaForm, unit> =
-//   vars .>> str "\\" .>>. pi .>>. vars .>> ``->`` .>>. expr
+let lf : Parser<LambdaForm, unit> =
+   pipe4 vars (ws >>. pi .>> ws) vars (``->`` >>. expr) (
+      fun fv up pa bd -> { freeVars=fv; updateable=up; parameters=pa; body=bd }
+   )
+
+//Bindings: binds --> var(1) = lf(1); ... ; var(n) = lf(n)    n >= 1
+let binding : Parser<Binding, unit> = var .>> ws .>> str "=" .>> ws .>>. lf .>> ws
+   //(pipe2 (binding .>>? str ";") (sepBy binding (str ";")) List.Cons) |> Map.ofList
+let binds : Parser<Bindings, unit> = sepBy1 binding (str ";" .>> ws) |>> Map.ofList
+
+let exprBinds : Parser<Bindings * Expr, unit> = 
+    binds .>> ws .>> str "in" .>> ws .>>. expr
+
+let letBinds : Parser<Expr, unit> =
+    str "let" >>. exprBinds |>>
+    fun (binds, expr) -> LetE {binds = binds; expr = expr}
+    
+let letrec : Parser<Expr, unit> =
+    str "letrec" >>. exprBinds |>>
+    fun (binds, expr) -> LetrecE {binds = binds; expr = expr}
+
+let case : Parser<Expr, unit> =
+   str "case" >>. expr .>> ws .>> str "of" .>> ws .>>. alts |>>
+    fun (expr, alts) -> PrimApplE {expr = expr; alts = alts}
 
 //Default alt: default --> var -> expr
 //                      | default -> expr
@@ -98,7 +114,7 @@ let expr : Parser<Expr, unit> =
 //let alts = (sepEndBy aalt (str ";")  <|> sepEndBy palt (str ";")) .>> ws .>>. dalt
 
 //Program: prog --> binds
-//let prog = binds
+let prog = binds
 
 (** Syntax of the STG language **
 
