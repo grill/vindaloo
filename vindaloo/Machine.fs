@@ -9,14 +9,18 @@ type Code = Eval of Syntax.Expr * Bindings
           | ReturnCon of Syntax.Constr * (Addr list)
           | ReturnInt of int
 
+type ContinuationDefault = {
+    var : string option
+    body : Syntax.Expr
+}
 
 type ConstrContinuation = {
-    cases : Map<Syntax.AAlt, Syntax.Expr>
-    def : Syntax.DAlt
+    cases : Map<Syntax.ConstrAppl, Syntax.Expr>
+    def : ContinuationDefault
 }
 type PrimContinuation = {
-    cases : Map<Syntax.PAlt, Syntax.Expr>
-    def : Syntax.DAlt
+    cases : Map<Syntax.Literal, Syntax.Expr>
+    def : ContinuationDefault
 }
 type Continuation = ConstrContinuation | PrimContinuation
 
