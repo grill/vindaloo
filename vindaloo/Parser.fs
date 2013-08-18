@@ -59,14 +59,8 @@ let primAppl : Parser<Expr, unit> =
 //                  | constr atoms
 //                  | prim atoms
 //                  | literal
-let expr : Parser<Expr, unit> =
-    (letBinds) <|>
-    (letrec) <|>
-    (case) <|>
-    (appl) <|>
-    (constrAppl |>> ConstrApplE) <|>
-    (primAppl) <|>
-    (literal |>> LiteralE)
+//forward declare it here so it can be used in patterns
+let expr, exprImpl = createParserForwardedToRef()
 
 //Update flag: pi --> u | n
 let pi : Parser<Updateable, unit> =
@@ -95,10 +89,6 @@ let letrec : Parser<Expr, unit> =
     str "letrec" >>. exprBinds |>>
     fun (binds, expr) -> LetrecE {binds = binds; expr = expr}
 
-let case : Parser<Expr, unit> =
-   str "case" >>. expr .>> ws .>> str "of" .>> ws .>>. alts |>>
-    fun (expr, alts) -> CaseE {expr = expr; alts = alts}
-
 //Default alt: default --> var -> expr
 //                      | default -> expr
 let dalt : Parser<DefaultAlt, unit> =
@@ -121,6 +111,21 @@ let galts xalt = sepEndBy xalt (str ";") .>> ws .>>. dalt
                  |>> fun (alts, def) -> {cases = Map.ofList alts; def = def}
 let alts : Parser<Alts, unit> =
     (galts palt |>> PrimitiveAlts) <|> (galts aalt |>> AlgebraicAlts)
+
+//case
+let case : Parser<Expr, unit> =
+   str "case" >>. expr .>> ws .>> str "of" .>> ws .>>. alts |>>
+    fun (expr, alts) -> CaseE {expr = expr; alts = alts}
+
+//expr is implemented here
+do exprImpl :=
+    (letBinds) <|>
+    (letrec) <|>
+    (case) <|>
+    (appl) <|>
+    (constrAppl |>> ConstrApplE) <|>
+    (primAppl) <|>
+    (literal |>> LiteralE)
 
 //Program: prog --> binds
 let prog = binds
