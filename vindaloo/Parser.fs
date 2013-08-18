@@ -5,6 +5,10 @@ open Vindaloo.Syntax
 
 let ws = spaces
 let str = pstring
+let list p = between (str "{") (str "}") (
+       ((sepBy (p .>> ws) (str "," .>> ws))) <|>
+       (ws >>. preturn(List.empty))
+    )
 
 //Literals: literal --> 0# | 1# | ...
 let literal : Parser<Literal, unit> = pint32 .>> str "#"
@@ -21,23 +25,22 @@ let var : Parser<Var, unit> =
     identifier (IdentifierOptions(isAsciiIdStart = isAsciiIdStart))
 
 //Variable lists: vars --> {var(1), ... , var(n)}    n >= 0
-let vars : Parser<Vars, unit> = between (str "{") (str "}") (
-       ((sepBy (var .>> ws) (str "," .>> ws))) <|>
-       (ws >>. preturn(List.empty))
-    )
+let vars : Parser<Vars, unit> = list var
 
 //Atom: atom --> var | literal
 let atom : Parser<Atom, unit> = var <|> literal
 
 //Atom lists: atoms --> {atom(1), ..., atom(n)}    n >= 0
-//let atoms = between (str "{") (str "}") (sepBy atom (str ","))
+let atoms : Parser<Atoms, unit> = list atom
 
 //Bindings: binds --> var(1) = lf(1); ... ; var(n) = lf(n)    n >= 1
 //let bind = var .>> ws .>> str "=" .>> ws .>>. lf .>> ws
 //let binds = bind .>>? str ";" .>>. sepBy bind (str ";")
 
 //Update flag: pi --> u | n
-//let pi = str "u" <|> str "n"
+let pi : Parser<Updateable, unit> =
+    (str "u" >>. preturn(true)) <|>
+    (str "n" >>. preturn(false))
 
 //TODO: FIXME
 //let constr = str "constr"
@@ -49,20 +52,22 @@ let atom : Parser<Atom, unit> = var <|> literal
 //                  | constr atoms
 //                  | prim atoms
 //                  | literal
-(*
-let expr = (str "let" >>. binds .>> ws .>> str "in" .>> ws .>> expr) <|>
-    (str "letrec" >>. binds .>> ws .>> str "in" .>> ws .>> expr) <|>
-    (str "case" >>. expr .>> ws .>> str "of" .>> ws .>> alts) <|>
-    (var .>> ws .>> atoms) <|>
-    (constr >> ws >>. atoms) <|>
+
+let expr : Parser<Expr, unit> =
+//    (str "let" >>. binds .>> ws .>> str "in" .>> ws .>> expr) <|>
+//    (str "letrec" >>. binds .>> ws .>> str "in" .>> ws .>> expr) <|>
+//    (str "case" >>. expr .>> ws .>> str "of" .>> ws .>> alts) <|>
+//    (var .>> ws .>> atoms) <|>
+//    (constr >> ws >>. atoms) <|>
     (prim .>> ws .>>. atoms) <|>
-    (literal)
-*)
+    literal
+
 
 //let ``->`` = ws .>> str "->" .>> ws
 
 //Lambda-forms: lf --> vars(f) \pi vars(a) -> expr
-//let lf = vars .>> str "\\" .>>. pi .>>. vars .>> ``->`` .>>. expr
+//let lf : Parser<LambdaForm, unit> =
+//   vars .>> str "\\" .>>. pi .>>. vars .>> ``->`` .>>. expr
 
 //Default alt: default --> var -> expr
 //                      | default -> expr
