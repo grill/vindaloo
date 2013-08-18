@@ -44,9 +44,16 @@ let pi : Parser<Updateable, unit> =
     (str "u" >>. preturn(true)) <|>
     (str "n" >>. preturn(false))
 
+let appl : Parser<Expr, unit> =
+    var .>> ws .>>. atoms |>>
+    fun (var, pars) -> ApplE { var = var; pars = pars }
+
 let isConstrStart c = isAsciiUpper c
 let constr : Parser<Constr, unit> =
     identifier (IdentifierOptions(isAsciiIdStart = isConstrStart))
+let constrAppl : Parser<Expr, unit> =
+    constr .>> ws .>>. atoms |>>
+    fun (constr, pars) -> ConstrApplE { constr = constr; pars = pars }
 
 let primAppl : Parser<Expr, unit> =
     prim .>> ws .>>. atoms |>>
@@ -64,8 +71,8 @@ let expr : Parser<Expr, unit> =
 //    (str "let" >>. binds .>> ws .>> str "in" .>> ws .>> expr) <|>
 //    (str "letrec" >>. binds .>> ws .>> str "in" .>> ws .>> expr) <|>
 //    (str "case" >>. expr .>> ws .>> str "of" .>> ws .>> alts) <|>
-//    (var .>> ws .>> atoms) <|>
-//    (constr >> ws >>. atoms) <|>
+    (appl) <|>
+    (constrAppl) <|>
     (primAppl) <|>
     (literal |>> LiteralE)
     
