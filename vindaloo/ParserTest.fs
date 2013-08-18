@@ -26,13 +26,13 @@ let ``wrong primitive op`` () = test prim "2+" |> should equal false
 
 //variable
 [<Fact>]
-let ``identifier`` () = test var "_Asdfs" |> should equal true
+let ``identifier`` () = test var "asdfs" |> should equal true
 [<Fact>]
 let ``wrong identifier`` () = test var "1" |> should equal false
 
 //list of vars
 [<Fact>]
-let ``list of vars`` () = test vars "{_Asdfs,  asdf,Asdf,sdf}" |> should equal true
+let ``list of vars`` () = test vars "{asdfs,  asdf,sdf,sdf}" |> should equal true
 [<Fact>]
 let ``empty list of vars`` () = test vars "{}" |> should equal true
 [<Fact>]
@@ -40,7 +40,7 @@ let ``a list of vars which was not closed`` () = test vars "{asdf, asdf" |> shou
 
 //atom
 [<Fact>]
-let ``identifier - atom`` () = test var "_Asdfs" |> should equal true
+let ``identifier - atom`` () = test var "asdfs" |> should equal true
 [<Fact>]
 let ``wrong identifier - atom`` () = test var "1" |> should equal false
 [<Fact>]
@@ -110,6 +110,30 @@ let ``alt lists need default`` () = test (galts palt) "1# -> 13#; 7# -> 3#; 5# -
 let ``alt lists need default even when only one option`` () = test (galts palt) "1# -> 13#" |> should equal false
 [<Fact>]
 let ``only default is also an alt list`` () = test (galts palt) "a -> 13#" |> should equal true
+//pi
+[<Fact>]
+let ``not updateable`` () = test pi "\\n" |> should equal true
+[<Fact>]
+let ``updateable`` () = test pi "\\u" |> should equal true
+
+//lf
+[<Fact>]
+let ``empty lf`` () = test lf "" |> should equal false
+[<Fact>]
+let ``lf with no parameters, updateable`` () = test lf "{} \\u {} -> 1#" |> should equal true
+[<Fact>]
+let ``lf with one parameter, updateable`` () = test lf "{asdf} \\u {asdf} -> 1#" |> should equal true
+[<Fact>]
+let ``lf with two parameter, non-updateable`` () = test lf "{b,d} \\n {c,f} -> 1#" |> should equal true
+
+//binds
+[<Fact>]
+let ``no binding`` () = test binds "" |> should equal false
+[<Fact>]
+let ``one binding`` () = test binds "ab = {} \\u {} -> 1#" |> should equal true
+[<Fact>]
+let ``two bindings`` () = test binds "ab = {} \\u {} -> 1# ; ab = {} \\u {} -> 1#" |> should equal true
+
 
 
 (* Test Input for Vindaloo *)
@@ -123,12 +147,30 @@ let ``only default is also an alt list`` () = test (galts palt) "a -> 13#" |> sh
      }
 *)
 
+[<Fact>]
+let ``add`` () =
+    test binds """
+       add = \a b ->
+         case a of {
+           a -> case b of {
+               b -> primOp + a b
+           }
+       }
+    """ |> should equal true
 
 (*
   compose = \f g x ->
      let gx = g x
      in f gx
 *)
+
+[<Fact>]
+let ``compose`` () =
+    test binds """
+       compose = \f g x ->
+          let gx = g x
+          in f gx
+    """ |> should equal true
 
 (*
     map = \f xs->
@@ -140,3 +182,16 @@ let ``only default is also an alt list`` () = test (galts palt) "a -> 13#" |> sh
             ; Nil -> Nil
         }
 *)
+
+[<Fact>]
+let ``map`` () =
+    test binds """
+        map = \f xs->
+          case xs of {
+              Cons x xs ->
+                let fx = f x
+                in let mapfxs = map f xs
+                   in Cons fx mapfxs
+              ; Nil -> Nil
+          }
+    """ |> should equal true
