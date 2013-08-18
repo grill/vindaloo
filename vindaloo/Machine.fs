@@ -1,4 +1,4 @@
-﻿module Machine
+﻿module Vindaloo.Machine
 
 type Addr = int
 type Closure = Syntax.LambdaForm * (Addr list)

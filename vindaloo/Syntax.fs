@@ -1,4 +1,4 @@
-﻿module Syntax
+﻿module Vindaloo.Syntax
 
 (** Syntax of the STG language **
 
