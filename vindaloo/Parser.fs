@@ -96,7 +96,7 @@ let letrec : Parser<Expr, unit> =
     fun (binds, expr) -> LetrecE {binds = binds; expr = expr}
 
 let case : Parser<Expr, unit> =
-   str "case" >>. expr .>> ws .>> str "of" .>> ws .>>. alts |>>
+    str "case" >>. expr .>> ws .>> str "of" .>> ws .>>. alts |>>
     fun (expr, alts) -> CaseE {expr = expr; alts = alts}
 
 //Default alt: default --> var -> expr
