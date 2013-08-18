@@ -50,7 +50,7 @@ and Operator = int -> int -> int
 and Vars = List<Var>
 and Var = string
 and Literal = int
-and Atom = Var | Literal
+and Atom = VarAtom of Var | LiteralAtom of Literal
 and Constr = string
 and Let = {
     binds : Bindings
