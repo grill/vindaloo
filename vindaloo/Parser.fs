@@ -20,15 +20,17 @@ let prim : Parser<Operator, unit> =
     (str "*#" >>. preturn(*)) <|>
     (str "/#" >>. preturn(/))
 
-let isAsciiIdStart c = isAsciiLetter c || c = '_'
+let isVarStart c = isAsciiLower c
 let var : Parser<Var, unit> =
-    identifier (IdentifierOptions(isAsciiIdStart = isAsciiIdStart))
+    identifier (IdentifierOptions(isAsciiIdStart = isVarStart))
 
 //Variable lists: vars --> {var(1), ... , var(n)}    n >= 0
 let vars : Parser<Vars, unit> = list var
 
 //Atom: atom --> var | literal
-let atom : Parser<Atom, unit> = var <|> literal
+let atom : Parser<Atom, unit> =
+    (var |>> VarA) <|>
+    (literal |>> LiteralA)
 
 //Atom lists: atoms --> {atom(1), ..., atom(n)}    n >= 0
 let atoms : Parser<Atoms, unit> = list atom
@@ -42,8 +44,13 @@ let pi : Parser<Updateable, unit> =
     (str "u" >>. preturn(true)) <|>
     (str "n" >>. preturn(false))
 
-//TODO: FIXME
-//let constr = str "constr"
+let isConstrStart c = isAsciiUpper c
+let constr : Parser<Constr, unit> =
+    identifier (IdentifierOptions(isAsciiIdStart = isConstrStart))
+
+let primAppl : Parser<Expr, unit> =
+    prim .>> ws .>>. atoms |>>
+    fun (op, pars) -> PrimApplE {op = op; pars = pars}
 
 //Expression: expr --> let binds in expr
 //                  | letrec binds in expr
@@ -59,9 +66,9 @@ let expr : Parser<Expr, unit> =
 //    (str "case" >>. expr .>> ws .>> str "of" .>> ws .>> alts) <|>
 //    (var .>> ws .>> atoms) <|>
 //    (constr >> ws >>. atoms) <|>
-    (prim .>> ws .>>. atoms) <|>
-    literal
-
+    (primAppl) <|>
+    (literal |>> LiteralE)
+    
 
 //let ``->`` = ws .>> str "->" .>> ws
 
