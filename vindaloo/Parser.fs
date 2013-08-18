@@ -107,7 +107,7 @@ let aalt = galt constrAppl
 
 //Alternatives: alts --> aalt(1); ... ; aalt(n); default    n >= 0 (Algebraic)
 //                   | palt(1); ... ; palt(n); default    n >= 0 (Primitive)
-let galts xalt = sepEndBy xalt (str ";") .>> ws .>>. dalt
+let galts xalt = sepEndBy xalt (str ";" .>> ws) .>> ws .>>. dalt
                  |>> fun (alts, def) -> {cases = Map.ofList alts; def = def}
 let alts : Parser<Alts, unit> =
     (galts palt |>> PrimitiveAlts) <|> (galts aalt |>> AlgebraicAlts)
