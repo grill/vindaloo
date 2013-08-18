@@ -99,7 +99,7 @@ let ``more algebraic alts`` () = test (galts aalt) "A {} -> 13#;B {7#} -> 3#;C {
 [<Fact>]
 let ``more algebraic alts with var default`` () = test (galts aalt) "A {} -> 13#; B {7#} -> 3#; C {a, b} -> 3#; a -> 13#" |> should equal true
 [<Fact>]
-let ``primitive alts`` () = test (galts palt) "3# -> 3#; default -> 13#" |> should equal true
+let ``primitive alts`` () = test (galts palt) "3# -> 3#;\n default -> 13#" |> should equal true
 [<Fact>]
 let ``more primitive alts`` () = test (galts palt) "1# -> 13#; 7# -> 3#; 5# -> 3#; default -> 13#" |> should equal true
 [<Fact>]
@@ -110,6 +110,15 @@ let ``alt lists need default`` () = test (galts palt) "1# -> 13#; 7# -> 3#; 5# -
 let ``alt lists need default even when only one option`` () = test (galts palt) "1# -> 13#" |> should equal false
 [<Fact>]
 let ``only default is also an alt list`` () = test (galts palt) "a -> 13#" |> should equal true
+
+//case
+[<Fact>]
+let ``easy case`` () = test case "case A {3#} of default -> 17#" |> should equal true
+[<Fact>]
+let ``algebraic case`` () = test case "case A {3#} of A {a} -> a {}; B {b} -> b {}; default -> 17#" |> should equal true
+[<Fact>]
+let ``primitive case`` () = test case "case 3# of 3# -> 3#; 4# -> 5#; default -> 17#" |> should equal true
+
 //pi
 [<Fact>]
 let ``not updateable`` () = test pi "\\n" |> should equal true
@@ -185,9 +194,8 @@ let ``compose`` () =
 
 [<Fact>]
 let ``map`` () =
-    test binds """
-map = {} \n {f,xs} ->
-    case xs of
+    test binds """map = {} \n {f,xs} ->
+    case xs {} of
         Nil {} -> Nil {};
         Cons {y,ys} -> let fy = {f,y} \u {} -> f {y};
                            mfy = {f,ys} \u {} -> map {f,ys}

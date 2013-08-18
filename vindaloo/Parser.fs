@@ -114,7 +114,7 @@ let alts : Parser<Alts, unit> =
 
 //case
 let case : Parser<Expr, unit> =
-    str "case" >>. expr .>> ws .>> str "of" .>> ws .>>. alts |>>
+    str "case" >>. ws >>. expr .>> ws .>> str "of" .>> ws .>>. alts |>>
     fun (expr, alts) -> CaseE {expr = expr; alts = alts}
 
 //expr is implemented here
