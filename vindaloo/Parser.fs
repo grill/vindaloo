@@ -16,7 +16,7 @@ let prim : Parser<Operator, unit> =
     (str "*#" >>. preturn(*)) <|>
     (str "/#" >>. preturn(/))
 
-let isAsciiIdStart = fun c -> isAsciiLetter c || c = '_'
+let isAsciiIdStart c = isAsciiLetter c || c = '_'
 let var : Parser<Var, unit> =
     identifier (IdentifierOptions(isAsciiIdStart = isAsciiIdStart))
 
