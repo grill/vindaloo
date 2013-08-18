@@ -51,9 +51,9 @@ let appl : Parser<Expr, unit> =
 let isConstrStart c = isAsciiUpper c
 let constr : Parser<Constr, unit> =
     identifier (IdentifierOptions(isAsciiIdStart = isConstrStart))
-let constrAppl : Parser<Expr, unit> =
+let constrAppl : Parser<ConstrAppl, unit> =
     constr .>> ws .>>. atoms |>>
-    fun (constr, pars) -> ConstrApplE { constr = constr; pars = pars }
+    fun (constr, pars) -> { constr = constr; pars = pars }
 
 let primAppl : Parser<Expr, unit> =
     prim .>> ws .>>. atoms |>>
@@ -72,12 +72,12 @@ let expr : Parser<Expr, unit> =
 //    (str "letrec" >>. binds .>> ws .>> str "in" .>> ws .>> expr) <|>
 //    (str "case" >>. expr .>> ws .>> str "of" .>> ws .>> alts) <|>
     (appl) <|>
-    (constrAppl) <|>
+    (constrAppl |>> ConstrApplE) <|>
     (primAppl) <|>
     (literal |>> LiteralE)
     
 
-//let ``->`` = ws .>> str "->" .>> ws
+let ``->`` = ws .>> str "->" .>> ws
 
 //Lambda-forms: lf --> vars(f) \pi vars(a) -> expr
 //let lf : Parser<LambdaForm, unit> =
@@ -85,17 +85,26 @@ let expr : Parser<Expr, unit> =
 
 //Default alt: default --> var -> expr
 //                      | default -> expr
-//let dalt = (str "default" <|> var) .>> ``->`` .>>. expr
+let dalt : Parser<DefaultAlt, unit> =
+    (str "default" |>> (fun _ -> None) <|> (var |>> Some)) .>> ``->`` .>>. expr
+        |>> fun (var, expr) -> {var=var; body=expr}
+
+
+//generic matching alternative
+let galt x = x .>> ``->`` .>>. expr
 
 //Primitive alt: palt --> literal -> expr
-//let palt = literal .>> ``->`` .>>. expr
+let palt = galt literal
 
 //Algebraic alt: aalt --> constr vars -> expr
-//let aalt = constr >>. vars .>> ``->`` .>>. expr
+let aalt = galt constrAppl
 
 //Alternatives: alts --> aalt(1); ... ; aalt(n); default    n >= 0 (Algebraic)
 //                   | palt(1); ... ; palt(n); default    n >= 0 (Primitive)
-//let alts = (sepEndBy aalt (str ";")  <|> sepEndBy palt (str ";")) .>> ws .>>. dalt
+let galts xalt = sepEndBy xalt (str ";") .>> ws .>>. dalt
+                 |>> fun (alts, def) -> {cases = Map.ofList alts; def = def}
+let alts : Parser<Alts, unit> =
+    (galts palt |>> PrimitiveAlts) <|> (galts aalt |>> AlgebraicAlts)
 
 //Program: prog --> binds
 //let prog = binds
