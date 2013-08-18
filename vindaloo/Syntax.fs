@@ -46,6 +46,7 @@ and LambdaForm = {
     parameters : Vars;
     body : Expr;
 }
+and Operator = int -> int -> int
 and Vars = List<Var>
 and Var = string
 and Literal = int

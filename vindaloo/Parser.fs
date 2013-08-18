@@ -1,6 +1,7 @@
 ﻿module Vindaloo.Parser
 
 open FParsec
+open Vindaloo.Syntax
 
 let ws = spaces
 let str = pstring
@@ -9,15 +10,21 @@ let str = pstring
 let literal : Parser<uint64, unit> = puint64 .>> str "#"
 
 //Primitive ops: prim --> +# | -# | *# | /#
-let prim : Parser<string, unit> = str "+#" <|> str "-#" <|> str "*#" <|> str "/#"
+let prim : Parser<Operator, unit> =
+    (str "+#" >>. preturn(+)) <|>
+    (str "-#" >>. preturn(-)) <|>
+    (str "*#" >>. preturn(*)) <|>
+    (str "/#" >>. preturn(/))
 
 let isAsciiIdStart = fun c -> isAsciiLetter c || c = '_'
-let var : Parser<string, unit> = identifier (IdentifierOptions(isAsciiIdStart = isAsciiIdStart))
+let var : Parser<string, unit> =
+    identifier (IdentifierOptions(isAsciiIdStart = isAsciiIdStart))
 
 //Variable lists: vars --> {var(1), ... , var(n)}    n >= 0
-let vars =
-    between (str "{") (str "}") (((sepBy (var .>> ws) (str "," .>> ws)))
-    <|> ws)
+let vars : Parser<Vars, unit> = between (str "{") (str "}") (
+       ((sepBy (var .>> ws) (str "," .>> ws))) <|>
+       (ws >>. preturn(List.empty))
+    )
 
 //Atom: atom --> var | literal
 //let atom = var <|> literal
