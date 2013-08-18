@@ -186,12 +186,24 @@ let ``compose`` () =
 [<Fact>]
 let ``map`` () =
     test binds """
-        map = \f xs->
-          case xs of {
-              Cons x xs ->
-                let fx = f x
-                in let mapfxs = map f xs
-                   in Cons fx mapfxs
-              ; Nil -> Nil
-          }
+map = {} \n {f,xs} ->
+    case xs of
+        Nil {} -> Nil {};
+        Cons {y,ys} -> let fy = {f,y} \u {} -> f {y};
+                           mfy = {f,ys} \u {} -> map {f,ys}
+                       in Cons {fy,mfy}
+    """ |> should equal true
+
+[<Fact>]
+let ``map1`` () =
+    test binds """
+map1 = {} \n {f} ->
+       letrec
+         mf = {f,mf} \n {xs} ->
+              case xs of
+                Nil {} -> Nil {}
+                Cons {y,ys} -> let fy = {f,y} \u {} -> f {y}
+                                   mfy = {mf,ys} \u {} -> mf {ys}
+                               in Cons {fy,mfy}
+        in mf
     """ |> should equal true
