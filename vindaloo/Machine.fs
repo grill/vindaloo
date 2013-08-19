@@ -1,5 +1,8 @@
 ﻿module Vindaloo.Machine
 
+open FParsec
+open Vindaloo.Parser
+
 type AddrT = int
 type Value = Addr of AddrT | Int of int
 type Closure = Syntax.LambdaForm * (Value list)
@@ -28,20 +31,6 @@ type STGMachine = {
 }
 
 type STGState = Working of STGMachine | Error of string
-
-let initSTG code =
-    let g,_ = Map.fold (fun (g, i) name _ -> (Map.add name i g, i+1))
-                        (Map [], 0) code
-    let h = Map.fold (fun h name addr -> (Map.add addr (Map.find name code) h))
-                        (Map []) g
-    {
-        argstack = []
-        retstack = []
-        updstack = []
-        heap = h
-        globals = g
-        code = Eval (Syntax.ApplE {var = "main"; pars = []}, Map [])
-    }
 
 let valueVar p g (el : Syntax.Var) =
    let get (map : Map<Syntax.Var, AddrT>) =
@@ -72,10 +61,37 @@ let step machine : STGState = match machine with
              code = Enter (addr); 
              argstack = List.append vList a
           }
-          | None -> Error ("")
-       | None -> Error ("")
+          | _ -> Error ("")
+       | _ -> Error ("")
     | _ -> Error ("The supplied state is not vaild")
 
+let initSTG code =
+    let g,_ = Map.fold (fun (g, i) name _ -> (Map.add name i g, i+1))
+                        (Map [], 0) code
+    let h = Map.fold (fun h name addr -> (Map.add addr (Map.find name code) h))
+                        (Map []) g
+    {
+        argstack = []
+        retstack = []
+        updstack = []
+        heap = h
+        globals = g
+        code = Eval (Syntax.ApplE {var = "main"; pars = []}, Map [])
+    }
 
-let eval code =
-    initSTG code
+(* abstract machine *)
+(*let eval code =
+    match (run prog code) with
+    | Success(result, _, _)   ->
+        initSTG result
+    | Failure(errorMsg, _, _) -> printfn "Failure: %s" errorMsg
+*)
+
+(* repl *)
+(*
+let stgmachine =
+    let runmachine = init
+    match System.Console.In.ReadLine() with
+    | null -> p
+    | line -> eval line state
+  *)
