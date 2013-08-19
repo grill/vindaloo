@@ -26,3 +26,19 @@ type STGMachine = {
     globals : Bindings
     code : Code
 }
+
+type STGState = Working of STGMachine | Error of string
+
+let initSTG code =
+    let g,_ = Map.fold (fun (g, i) name _ -> (Map.add name i g, i+1))
+                        (Map [], 0) code
+    let h = Map.fold (fun h name addr -> (Map.add addr (Map.find name code) h))
+                        (Map []) g
+    {
+        argstack = []
+        retstack = []
+        updstack = []
+        heap = h
+        globals = g
+        code = Eval (Syntax.ApplE {var = "main"; pars = []}, Map [])
+    }
