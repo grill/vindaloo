@@ -74,11 +74,13 @@ let step machine : STGState = match machine with
         | Some (Addr addr) ->
             match (valueList p g xs) with
             | Some (vList) ->
-                Working { machine with
+                Working {
+                  machine with
                     code = Enter (addr); 
                     argstack = List.append vList a
                 }
             | None -> Error ("")
+        | Some (Int _) -> Error ("Primitives cannot be applied")
         | None -> Error ("")
     | _ -> Error ("The supplied state is not vaild")
 
