@@ -119,8 +119,8 @@ let case : Parser<Expr, unit> =
 
 //expr is implemented here
 do exprImpl :=
-    (letBinds) <|>
     (letrec) <|>
+    (letBinds) <|>
     (case) <|>
     (appl) <|>
     (constrAppl |>> ConstrApplE) <|>

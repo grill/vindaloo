@@ -200,7 +200,8 @@ let ``map`` () =
         Nil {} -> Nil {};
         Cons {y,ys} -> let fy = {f,y} \u {} -> f {y};
                            mfy = {f,ys} \u {} -> map {f,ys}
-                       in Cons {fy,mfy}""" |> should equal true
+                       in Cons {fy,mfy};
+        default -> Nil {}""" |> should equal true
 
 [<Fact>]
 let ``map1`` () =
@@ -208,10 +209,11 @@ let ``map1`` () =
 map1 = {} \n {f} ->
        letrec
          mf = {f,mf} \n {xs} ->
-              case xs of
-                Nil {} -> Nil {}
-                Cons {y,ys} -> let fy = {f,y} \u {} -> f {y}
+              case xs {} of
+                Nil {} -> Nil {};
+                Cons {y,ys} -> let fy = {f,y} \u {} -> f {y};
                                    mfy = {mf,ys} \u {} -> mf {ys}
-                               in Cons {fy,mfy}
-        in mf
+                               in Cons {fy,mfy};
+                default -> Nil {}
+        in mf {}
     """ |> should equal true
