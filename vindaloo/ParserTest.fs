@@ -159,12 +159,10 @@ let ``two bindings`` () = test binds "ab = {} \\u {} -> 1# ; ab = {} \\u {} -> 1
 [<Fact>]
 let ``add`` () =
     test binds """
-       add = \a b ->
-         case a of {
-           a -> case b of {
-               b -> primOp + a b
-           }
-       }
+       add = {} \n {a, b} ->
+         case a {} of
+           a -> case b {} of
+               b -> +# {a, b}
     """ |> should equal true
 
 (*
@@ -176,9 +174,9 @@ let ``add`` () =
 [<Fact>]
 let ``compose`` () =
     test binds """
-       compose = \f g x ->
-          let gx = g x
-          in f gx
+       compose = {} \n {f, g, x} ->
+          let gx = {g,x} \u {} -> g {x}
+          in f {gx}
     """ |> should equal true
 
 (*
