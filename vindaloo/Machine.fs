@@ -27,7 +27,7 @@ type STGMachine = {
     code : Code
 }
 
-type STGState = Working of STGMachine | Error of string
+type STGState = Running of STGMachine | Error of string * STGMachine | Finished of STGMachine
 
 let initSTG code =
     let code' = Map.map (fun k v -> (v, [])) code
@@ -74,15 +74,15 @@ let step machine : STGState = match machine with
         | Some (Addr addr) ->
             match (valueList p g xs) with
             | Some (vList) ->
-                Working {
+                Running {
                   machine with
                     code = Enter (addr); 
                     argstack = List.append vList a
                 }
-            | None -> Error ("")
-        | Some (Int _) -> Error ("Primitives cannot be applied")
-        | None -> Error ("")
-    | _ -> Error ("The supplied state is not vaild")
+            | None -> Error ("", machine)
+        | Some (Int _) -> Error ("Primitives cannot be applied", machine)
+        | None -> Error ("", machine)
+    | _ -> Error ("The supplied state is not vaild", machine)
 
 
 let eval code =
