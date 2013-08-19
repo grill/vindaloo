@@ -30,9 +30,10 @@ type STGMachine = {
 type STGState = Working of STGMachine | Error of string
 
 let initSTG code =
+    let code' = Map.map (fun k v -> (v, [])) code
     let g,_ = Map.fold (fun (g, i) name _ -> (Map.add name i g, i+1))
-                        (Map [], 0) code
-    let h = Map.fold (fun h name addr -> (Map.add addr (Map.find name code) h))
+                        (Map [], 0) code'
+    let h = Map.fold (fun h name addr -> (Map.add addr (Map.find name code') h))
                         (Map []) g
     {
         argstack = []
