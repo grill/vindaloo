@@ -42,3 +42,40 @@ let initSTG code =
         globals = g
         code = Eval (Syntax.ApplE {var = "main"; pars = []}, Map [])
     }
+
+let valueVar p g (el : Syntax.Var) =
+   let get (map : Map<Syntax.Var, AddrT>) =
+      let addr = map.TryFind el
+      if (addr.IsSome) then Some (Addr addr.Value) else None
+   let pAddr = get p
+   if (pAddr.IsSome) then pAddr else get g
+
+let value p g (x : Syntax.Atom) : Option<Value> = match x with
+    | Syntax.LiteralA k -> Some (Int k)
+    | Syntax.VarA v -> valueVar p g v
+
+let rec valueList p g (xs : Syntax.Atoms) : Option<Value list> = match xs with
+   | h :: tail ->
+      match (value p g h) with
+      | Some v -> match (valueList p g tail) with
+         | Some list -> Some (v :: list) 
+         | None -> None
+      | None -> None
+   | [] -> Some []
+
+let step machine : STGState = match machine with
+    | { code = Eval (Syntax.ApplE {var = f; pars = xs}, p);
+        globals = g; argstack = a } ->
+       match (valueVar p g f) with
+       | Some (Addr addr) -> match (valueList p g xs) with
+          | Some (vList) -> Working { machine with
+             code = Enter (addr); 
+             argstack = List.append vList a
+          }
+          | None -> Error ("")
+       | None -> Error ("")
+    | _ -> Error ("The supplied state is not vaild")
+
+
+let eval code =
+    initSTG code
