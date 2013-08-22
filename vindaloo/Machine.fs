@@ -7,7 +7,7 @@ open Vindaloo.Syntax
 type AddrT = int
 type Value = Addr of AddrT | Int of int
 type Closure = Syntax.LambdaForm * (Value list)
-type Heap = Map<AddrT, Closure>
+type Heap = Map<AddrT, Closure> * int
 type LocalBindings = Map<Syntax.Var, Value>
 type GlobalBindings = Map<Syntax.Var, AddrT>
 type Code = Eval of Syntax.Expr * LocalBindings
@@ -64,8 +64,46 @@ let splitList list endIdx =
         | _ -> ([], []) // --- this should never happen, because length(as) >= length(xs)!!
     split list 0
 
+let malloc closure (heap, nextaddr) : Heap =
+    (Map.add nextaddr closure heap, nextaddr + 1)
+
+let bind var closure environment heap : LocalBindings * Heap =
+    let heap' = malloc closure heap
+    let environment' = Map.add var (snd heap' |> Addr) environment
+    (environment', heap')
+    
+let bindrec newbinds env (heap, addr) : LocalBindings * Heap =
+    let newaddrs, addr' =
+        newbinds |>
+        Map.fold
+          (fun (env', addr') var _ ->
+            Map.add var (addr') env', addr' + 1)
+          (Map [], addr)
+    let env' =
+        newaddrs |>
+        Map.fold
+          (fun env' var addr ->
+            Map.add var (Addr addr) env')
+          env
+    let newbinds' =
+        newbinds |>
+        Map.map
+          (fun var lf ->
+            lf,
+            lf.freeVars |> List.map (fun x -> Map.find x env'))
+    let heap' =
+        newbinds' |>
+        Map.fold
+          (fun heap' var clos ->
+            Map.add (Map.find var newaddrs) clos heap')
+          heap
+    (env', (heap', addr'))
+
+//Perform one computational step of the STG-machine.
+//references above the rules are to the STG-machine paper
 let step machine : STGState =
     match machine with
+    //5.2 Applications (1)
     | { code = Eval (Syntax.ApplE {var = f; pars = xs}, p);
         globals = g; argstack = a } ->
         match (valueVar p g f) with
@@ -80,7 +118,8 @@ let step machine : STGState =
             | None -> Error ("", machine)
         | Some (Int _) -> Error ("Primitives cannot be applied", machine)
         | None -> Error ("", machine)
-    | { code = Enter addr; heap = heap; globals = g; argstack = a } when heap.ContainsKey addr ->
+    //5.2 Applications (2)
+    | { code = Enter addr; heap = heap,_; globals = g; argstack = a } when heap.ContainsKey addr ->
       match Map.find addr heap with
       | ({ freeVars = vs; updateable = false; parameters = xs; body = e}, wsf)
         when List.length a >= List.length xs ->
@@ -92,10 +131,33 @@ let step machine : STGState =
                     argstack = a'
                 }
       | _ -> Error("Not a correct Enter!", machine)
+    //5.3 let(rec) Expressions (3)
+    | { code = Eval (Syntax.LetE {binds = binds; expr = e}, p); heap = h} ->
+        let binds' = 
+            binds |>
+            Map.map
+              (fun _ lf ->
+                lf,
+                lf.freeVars |> List.map (fun x -> Map.find x p))
+        let p', h' =
+            Map.fold (fun (p', h') var code ->
+                bind var code p' h') (p,h) binds'
+        Running {
+          machine with
+            code = Eval (e, p')
+            heap = h'
+        }
+     | { code = Eval (Syntax.LetrecE {binds = binds; expr = e}, p); heap = h} ->
+        let p', h' = bindrec binds p h
+        Running {
+          machine with
+            code = Eval (e, p')
+            heap = h'
+        }
     | _ -> Error ("The supplied state is not vaild", machine) //or the machine is finished
 
 let initSTG code =
-    let g,_ = Map.fold (fun (g, i) name _ -> (Map.add name i g, i+1))
+    let g, nextaddr = Map.fold (fun (g, i) name _ -> (Map.add name i g, i+1))
                         (Map [], 0) code
     let h = Map.fold (fun h name addr -> (Map.add addr (Map.find name code) h))
                         (Map []) g
@@ -103,7 +165,7 @@ let initSTG code =
         argstack = []
         retstack = []
         updstack = []
-        heap = h
+        heap = h, nextaddr
         globals = g
         code = Eval (Syntax.ApplE {var = "main"; pars = []}, Map [])
     }
