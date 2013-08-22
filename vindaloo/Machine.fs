@@ -8,8 +8,9 @@ type AddrT = int
 type Value = Addr of AddrT | Int of int
 type Closure = Syntax.LambdaForm * (Value list)
 type Heap = Map<AddrT, Closure>
-type Bindings = Map<Syntax.Var, AddrT>
-type Code = Eval of Syntax.Expr * Bindings
+type LocalBindings = Map<Syntax.Var, Value>
+type GlobalBindings = Map<Syntax.Var, AddrT>
+type Code = Eval of Syntax.Expr * LocalBindings
           | Enter of AddrT
           | ReturnCon of Syntax.Constr * (Value list)
           | ReturnInt of int
@@ -27,18 +28,15 @@ type STGMachine = {
     retstack : Continuation list
     updstack : UpdateFrame list
     heap : Heap
-    globals : Bindings
+    globals : GlobalBindings
     code : Code
 }
 
 type STGState = Running of STGMachine | Error of string * STGMachine | Finished of STGMachine
 
-let valueVar p g (el : Syntax.Var) =
-   let get (map : Map<Syntax.Var, AddrT>) =
-      let addr = map.TryFind el
-      if (addr.IsSome) then Some (Addr addr.Value) else None
-   let pAddr = get p
-   if (pAddr.IsSome) then pAddr else get g
+let valueVar p g el =
+   let pAddr = Map.tryFind el p
+   if (pAddr.IsSome) then pAddr else Map.tryFind el g |> Option.map Addr
 
 let value p g (x : Syntax.Atom) : Option<Value> =
     match x with
@@ -66,7 +64,8 @@ let splitList list endIdx =
         | _ -> ([], []) // --- this should never happen, because length(as) >= length(xs)!!
     split list 0
 
-let step machine : STGState = match machine with
+let step machine : STGState =
+    match machine with
     | { code = Eval (Syntax.ApplE {var = f; pars = xs}, p);
         globals = g; argstack = a } ->
         match (valueVar p g f) with
