@@ -86,14 +86,10 @@ and Expr = LetE of Let
          | ConstrApplE of ConstrAppl
          | PrimApplE of PrimAppl
          | LiteralE of Literal
-and DefaultAlt = {
-    var : Var option
-    body : Expr
-}
 and AltList<'a when 'a:comparison> = {
-    cases : Map<'a, Expr>
-    def : DefaultAlt
+    cases : Map<'a, Vars * Expr>
+    def : Vars * Expr
 }
-and AlgebraicAltList = AltList<ConstrAppl>
+and AlgebraicAltList = AltList<Constr>
 and PrimitiveAltList = AltList<Literal>
 and Alts = AlgebraicAlts of AlgebraicAltList | PrimitiveAlts of PrimitiveAltList

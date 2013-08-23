@@ -84,12 +84,58 @@ let step machine : STGState =
     //5.4 Case expressions and data constructors (5) - evaluate constructor
     | { code = Eval (Syntax.ConstrApplE {constr = c; pars = xs}, p) ; globals = g } ->
         match OptionListMap p g xs value with
-        | Some vs ->
+        | Some ws ->
             Running {
-                machine with code = ReturnCon (c, vs)
+                machine with code = ReturnCon (c, ws)
             }
         | _ -> Error ("Evaluate Constructor failed!", machine)
+    
+    //5.4 Case expressions and data constructors (6-8) - choose continuation
+    | { code = ReturnCon (c, ws) ; retstack = rs ; heap = h } ->
+        match rs with
+        | (Syntax.AlgebraicAlts alts, p)::_ ->
 
+                // (6) - normal case expression
+                match
+                    (if (Map.containsKey c alts.cases) then
+                        let vs, e = Map.find c alts.cases
+                        Some (e, List.zip vs ws |> List.append (Map.toList p) |> Map.ofList, h)
+                    else
+                        let v, e = alts.def
+                        match v with
+                        
+                        // (7) - default case expression
+                        | [] -> Some (e, p, h)
+
+                        // (8) - default case expression with variable
+                        | v::[] ->
+                            let a = h.Length
+                            let vs = [1..ws.Length] |> List.map (fun x -> c + string x ) 
+                            let h' =
+                                [| ( 
+                                    { Syntax.freeVars = vs; Syntax.updateable = false; Syntax.parameters = [];
+                                    Syntax.body = Syntax.ConstrApplE { constr = c; pars = List.map Syntax.VarA vs } }
+                                , ws) |] |> Array.append h  
+                            Some (e, Map.add v (Addr a) p, h')
+                        | _ -> None) with
+                | Some (e, p', h') ->
+                    Running {
+                        machine with
+                            code = Eval (e, p') ;
+                            heap = h'
+                    }
+                | None -> Error ("Choose Continuation failed!", machine)
+        | _ -> Error ("Choose Continuation failed! Invaild returnstack!", machine)
+        
+    //5.5 Built in operations (9) - eval primitive
+    | { code = Eval (Syntax.LiteralE k, p) } ->
+        Running {
+                machine with
+                    code = ReturnInt (k)
+            }
+
+    //5.5 Built in operations (10) - eval primitive parameter
+    | { code = Eval (Syntax.LiteralE k, p)
     | _ -> Error ("The supplied state is not vaild", machine) //or the machine is finished
 
 let initSTG code =

@@ -89,26 +89,28 @@ let letrec : Parser<Expr, unit> =
     str "letrec" >>. exprBinds |>>
     fun (binds, expr) -> LetrecE {binds = binds; expr = expr}
 
-//Default alt: default --> var -> expr
-//                      | default -> expr
-let dalt : Parser<DefaultAlt, unit> =
-    (str "default" |>> (fun _ -> None) <|> (var |>> Some)) .>> ``->`` .>>. expr
-        |>> fun (var, expr) -> {var=var; body=expr}
-
-
 //generic matching alternative
 let galt x = x .>> ``->`` .>>. expr
 
+//Default alt: default --> var -> expr
+//                      | default -> expr
+let dalt = galt ((str "default" >>% []) <|> (var |>> (fun v -> [v]) ))
+
 //Primitive alt: palt --> literal -> expr
-let palt = galt literal
+let palt =
+    galt literal |>>
+    fun (l, e) -> (l, ([], e))
 
 //Algebraic alt: aalt --> constr vars -> expr
-let aalt = galt constrAppl
+let aalt =
+    galt (constr .>> ws .>>. vars) |>>
+    fun ((constr, pars), e) -> (constr, (pars, e))
 
 //Alternatives: alts --> aalt(1); ... ; aalt(n); default    n >= 0 (Algebraic)
 //                   | palt(1); ... ; palt(n); default    n >= 0 (Primitive)
-let galts xalt = sepEndBy xalt (str ";" .>> ws) .>> ws .>>. dalt
-                 |>> fun (alts, def) -> {cases = Map.ofList alts; def = def}
+let galts xalt =
+    sepEndBy xalt (str ";" .>> ws) .>> ws .>>. dalt |>>
+    fun (alts, def) -> {cases = Map.ofList alts; def = def}
 let alts : Parser<Alts, unit> =
     (galts palt |>> PrimitiveAlts) <|> (galts aalt |>> AlgebraicAlts)
 
