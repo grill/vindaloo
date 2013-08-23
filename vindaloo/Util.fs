@@ -15,9 +15,14 @@ let OptionAnd tf1 tf2 f =
     | Some x ->
         match tf2 with
         | None -> None
-        | Some y -> Some f x y
+        | Some y -> Some (f x y)
 
 let OptionOr tf1 (tf2 : Lazy<Option<'T>>) =
     match tf1 with
     | None -> tf2.Force()
     | x -> x
+
+let rec OptionListMap p g xs f =
+    match xs with
+    | h::tail -> OptionAnd (f p g h) (OptionListMap p g tail f) (fun v vs -> v :: vs)
+    | [] -> Some []

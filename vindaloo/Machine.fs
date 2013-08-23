@@ -11,23 +11,6 @@ let value p g x =
     match x with
     | Syntax.LiteralA k -> Some (Int k)
     | Syntax.VarA v -> valueVar p g v
-    | _ -> None
-
-let rec valueList p g xs f : Option<Value list> =
-    match xs with
-    | h::tail -> OptionAnd (f p g h) (valueList p g tail f) (fun v vs -> v :: vs)
-    | [] -> Some []
-
-(*
-let ``let`` h p binds =
-    let triple = Map.fold (fun pars name (code : Syntax.LambdaForm) ->
-            let updateTriple (g, l, i) ws = (Map.add name (Addr i) g, (code, ws), i+1)
-            let ws = valueList p Map.empty code.freeVars valueVar
-            OptionAnd pars ws updateTriple) (Some (p, [], Array.length h)) binds
-    match triple with
-    | Some (p', hn, _) -> Some (p', List.toArray hn |> Array.append h)
-    | _ -> None
-*)
 
 let EnvironmentAdd hlen p binds =
     let p', _ = Map.fold (fun (g, i) name _ -> (Map.add name (Addr i) g, i+1)) (p, hlen) binds
@@ -36,7 +19,7 @@ let EnvironmentAdd hlen p binds =
 let HeapAdd h prhs binds =
     let hn = Map.fold (fun l _ (code : Syntax.LambdaForm) ->
         (fun l ws -> (code, ws) :: l) |>
-        OptionAnd l (valueList prhs Map.empty code.freeVars valueVar)) (Some []) binds
+        OptionAnd l (OptionListMap prhs Map.empty code.freeVars valueVar)) (Some []) binds
     match hn with
     | Some (hn) -> Some (List.toArray hn |> Array.append h)
     | _ -> None
@@ -48,7 +31,7 @@ let step machine : STGState =
     
     //5.2 Applications (1) - tail call
     | { code = Eval (Syntax.ApplE {var = f; pars = xs}, p); globals = g; argstack = a } ->
-        match (value p g (Syntax.VarA f), valueList p g xs value) with
+        match (value p g (Syntax.VarA f), OptionListMap p g xs value) with
         | (Some (Addr addr), Some (vList)) ->
             Running {
             machine with
@@ -92,11 +75,20 @@ let step machine : STGState =
         
     //5.4 Case expressions and data constructors (4) - case
     | { code = Eval (Syntax.CaseE {alts = alts; expr = e}, p) ; retstack = rs } ->
+        Running {
+            machine with
+                code = Eval (e, p);
+                retstack = (alts, p) :: rs
+        }
+
+    //5.4 Case expressions and data constructors (5) - evaluate constructor
+    | { code = Eval (Syntax.ConstrApplE {constr = c; pars = xs}, p) ; globals = g } ->
+        match OptionListMap p g xs value with
+        | Some vs ->
             Running {
-                machine with
-                    code = Eval (e, p);
-                    retstack = (alts, p) :: rs
+                machine with code = ReturnCon (c, vs)
             }
+        | _ -> Error ("Evaluate Constructor failed!", machine)
 
     | _ -> Error ("The supplied state is not vaild", machine) //or the machine is finished
 
