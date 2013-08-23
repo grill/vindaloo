@@ -95,13 +95,13 @@ let step machine : STGState =
 let initSTG code =
     let g, _ = Map.fold (fun (g, i) name _ -> (Map.add name i g, i+1))
                         (Map [], 0) code
-    let h = Map.fold (fun h name addr -> ( (Map.find name code) :: h))
-                        ([]) g
+    let h = Map.foldBack (fun name addr h -> ( (Map.find name code) :: h))
+                        g ([])
     {
         argstack = []
         retstack = []
         updstack = []
-        heap = h |> List.rev |> List.toArray
+        heap = h |> List.toArray
         globals = g
         code = Eval (Syntax.ApplE {var = "main"; pars = []}, Map [])
     }
