@@ -1,6 +1,7 @@
 ﻿module Vindaloo.Machine
 
 open FParsec
+open Vindaloo.Syntax
 open Vindaloo.Parser
 open Vindaloo.Architecture
 open Vindaloo.Util
@@ -162,6 +163,29 @@ let step machine : STGState =
             machine with
                 code = Eval (e, p')
          }
+
+    //5.6 Updating (16) - updating constructors
+    | { code = ReturnCon (c, ws) ;
+        retstack = [] ;
+        updstack = upd :: updstack' ;
+        heap = h } ->
+        let vc = "v" + c
+        let vs =  [1..ws.Length] |> List.map (fun x -> vc + string x )
+        h.[upd.closure] <-
+            ({
+                freeVars = vs ;
+                updateable = false ;
+                parameters = [] ;
+                body = ConstrApplE {constr = c;  pars = vs |> List.map VarA}
+            }, ws)
+        Running {
+          machine with
+            code = ReturnCon (c, ws) ;
+            argstack = upd.argstack ;
+            retstack = upd.retstack ;
+            updstack = updstack' ;
+            heap = h
+        }
 
     | _ -> Error ("Eval primitive parameter failed!", machine) //or the machine is finished
 
