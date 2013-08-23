@@ -162,6 +162,16 @@ let step machine : STGState =
             machine with
                 code = Eval (e, p')
          }
+    
+    //5.5 Built in operations (14) - eval arithmetic operation
+    | { code = Eval (Syntax.PrimApplE { op = op ; pars = x1::x2::[] }, p) ; globals = g } ->
+        match (value p g x1, value p g x2) with
+        | (Some (Int i1), Some (Int i2)) ->
+                Running {
+                machine with
+                    code = ReturnInt (op i1 i2)
+                }
+        | _ -> Error ("Eval arithmetic operation failed!", machine)
 
     | _ -> Error ("Eval primitive parameter failed!", machine) //or the machine is finished
 
