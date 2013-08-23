@@ -127,9 +127,9 @@ let step machine : STGState =
     //5.5 Built in operations (9) - eval literal
     | { code = Eval (Syntax.LiteralE k, p) } ->
         Running {
-                machine with
-                    code = ReturnInt (k)
-            }
+            machine with
+                code = ReturnInt (k)
+        }
 
     //!!!!!!!!!!!!!!!!!!!!!!!! This rule should probably be moved above the (1) rule !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     //5.5 Built in operations (10) - eval literal parameter
@@ -146,9 +146,22 @@ let step machine : STGState =
     //5.5 Built in operations (11) - case expression with literal
     | { code = ReturnInt k ; retstack = (Syntax.PrimitiveAlts alts, p)::_ } when Map.containsKey k alts.cases ->
         Running {
-                machine with
-                    code = Eval (Map.find k alts.cases |> (fun (_,e) -> e), p)
-            }
+            machine with
+                code = Eval (Map.find k alts.cases |> (fun (_,e) -> e), p)
+        }
+            
+    //5.5 Built in operations (12-13) - default case expression with literal
+    | { code = ReturnInt k ; retstack = (Syntax.PrimitiveAlts alts, p)::_ } ->
+        let p', e = 
+            match alts.def with
+            // (12) - default case expression with vsariable
+            | (v::[], e) -> (Map.add v (Int k) p, e)
+            // (13) - default case expression
+            | (_, e) -> (p, e)
+        Running {
+            machine with
+                code = Eval (e, p')
+         }
 
     | _ -> Error ("Eval primitive parameter failed!", machine) //or the machine is finished
 
