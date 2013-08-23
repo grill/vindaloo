@@ -41,28 +41,39 @@ let printSTG machine =
       machine.retstack
       machine.heap.Length
 
+type Step = Not | Once | Finish
+type Cmds = Heap of int | Run
+
 let moreInfo cmd machine =
-    let heap = str "heap" >>. ws >>. pint32 |>> machine.heap.GetValue
-    match run heap cmd with
-      | Success(result, _ ,_ ) ->
-            printfn "%A" result; true
+    let cmdparse =
+        (str "heap" >>. ws >>. pint32 |>> Heap)
+        <|> (str "run" >>% Run)
+    match run cmdparse cmd with
+      | Success(Heap addr, _ ,_ ) ->
+            printfn "%A" machine.heap.[addr]; Not
+      | Success(Run, _, _) ->
+            Finish
       | Failure(_, _, _) ->
-            false
+            Once
  
 let rec printInfo machine =
     let cmd = Console.ReadLine ()
-    if moreInfo cmd machine then
-        printInfo machine
+    match moreInfo cmd machine with
+      | Not -> printInfo machine
+      | Once -> true
+      | Finish -> false
 
 let debugSTG code =
     let machine = initSTG code
-    let rec runstg m = 
-        let mstate = step m
+    let rec runstg mstate do_info = 
         match mstate with
         | Running m' ->
             printSTG m'
-            printInfo m'
-            runstg m'
+            let next_info =
+                if do_info
+                then printInfo m'
+                else false
+            runstg (step m') next_info
         | Error (msg, m') ->
             printfn "Machine is dead, last state:"
             printfn "%s" msg
@@ -72,7 +83,7 @@ let debugSTG code =
     printfn "%A" code
     printfn "%A" machine
     printSTG machine
-    runstg machine
+    runstg (Running machine) true
 
 
 
