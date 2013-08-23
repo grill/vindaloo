@@ -44,6 +44,7 @@ let printSTG machine =
 let debugSTG code =
     let machine = initSTG code
     let rec runstg m = 
+        let cmd = Console.ReadLine()
         let mstate = step m
         match mstate with
         | Running m' ->
