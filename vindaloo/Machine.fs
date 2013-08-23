@@ -91,50 +91,48 @@ let step machine : STGState =
         | _ -> Error ("Evaluate Constructor failed!", machine)
     
     //5.4 Case expressions and data constructors (6-8) - choose continuation
-    | { code = ReturnCon (c, ws) ; retstack = rs ; heap = h } ->
-        match rs with
-        | (Syntax.AlgebraicAlts alts, p)::_ ->
-
-                // (6) - normal case expression
-                match
-                    (if (Map.containsKey c alts.cases) then
-                        let vs, e = Map.find c alts.cases
-                        Some (e, List.zip vs ws |> List.append (Map.toList p) |> Map.ofList, h)
-                    else
-                        let v, e = alts.def
-                        match v with
+    | { code = ReturnCon (c, ws) ; retstack = (Syntax.AlgebraicAlts alts, p)::_ ; heap = h } ->
+        // (6) - normal case expression
+        match
+            (if (Map.containsKey c alts.cases) then
+                let vs, e = Map.find c alts.cases
+                Some (e, List.zip vs ws |> List.append (Map.toList p) |> Map.ofList, h)
+            else
+                let v, e = alts.def
+                match v with
                         
-                        // (7) - default case expression
-                        | [] -> Some (e, p, h)
+                // (7) - default case expression
+                | [] -> Some (e, p, h)
 
-                        // (8) - default case expression with variable
-                        | v::[] ->
-                            let a = h.Length
-                            let vs = [1..ws.Length] |> List.map (fun x -> c + string x ) 
-                            let h' =
-                                [| ( 
-                                    { Syntax.freeVars = vs; Syntax.updateable = false; Syntax.parameters = [];
-                                    Syntax.body = Syntax.ConstrApplE { constr = c; pars = List.map Syntax.VarA vs } }
-                                , ws) |] |> Array.append h  
-                            Some (e, Map.add v (Addr a) p, h')
-                        | _ -> None) with
-                | Some (e, p', h') ->
-                    Running {
-                        machine with
-                            code = Eval (e, p') ;
-                            heap = h'
-                    }
-                | None -> Error ("Choose Continuation failed!", machine)
-        | _ -> Error ("Choose Continuation failed! Invaild returnstack!", machine)
+                // (8) - default case expression with variable
+                | v::[] ->
+                    let a = h.Length
+                    let vs = [1..ws.Length] |> List.map (fun x -> c + string x ) 
+                    let h' =
+                        [| ( 
+                            { Syntax.freeVars = vs; Syntax.updateable = false; Syntax.parameters = [];
+                            Syntax.body = Syntax.ConstrApplE { constr = c; pars = List.map Syntax.VarA vs } }
+                        , ws) |] |> Array.append h  
+                    Some (e, Map.add v (Addr a) p, h')
+                | _ -> None)
+            with
+        | Some (e, p', h') ->
+            Running {
+                machine with
+                    code = Eval (e, p') ;
+                    heap = h'
+            }
+        | None -> Error ("Choose Continuation failed!", machine)
         
-    //5.5 Built in operations (9) - eval primitive
+    //5.5 Built in operations (9) - eval literal
     | { code = Eval (Syntax.LiteralE k, p) } ->
         Running {
                 machine with
                     code = ReturnInt (k)
             }
 
-    //5.5 Built in operations (10) - eval primitive parameter
+    //!!!!!!!!!!!!!!!!!!!!!!!! This rule should probably be moved above the (1) rule !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    //5.5 Built in operations (10) - eval literal parameter
     | { code = Eval (Syntax.ApplE {var = v; pars = [] }, p) }
         when (match Map.tryFind v p with | Some (Int _) -> true | _ -> false) ->
         match Map.find v p with
@@ -144,6 +142,13 @@ let step machine : STGState =
                     code = ReturnInt x
             }
         | _ -> Error ("Eval primitive parameter failed!", machine)
+        
+    //5.5 Built in operations (11) - case expression with literal
+    | { code = ReturnInt k ; retstack = (Syntax.PrimitiveAlts alts, p)::_ } when Map.containsKey k alts.cases ->
+        Running {
+                machine with
+                    code = Eval (Map.find k alts.cases |> (fun (_,e) -> e), p)
+            }
 
     | _ -> Error ("Eval primitive parameter failed!", machine) //or the machine is finished
 
