@@ -2,10 +2,11 @@
 
 type AddrT = int
 type Value = Addr of AddrT | Int of int
-type Enviorment = Map<Syntax.Var, AddrT>
-type Closure = Syntax.LambdaForm * Enviorment * (Value list)
+type LocalEnvironment = Map<Syntax.Var, Value>
+type GlobalEnvironment = Map<Syntax.Var, AddrT>
+type Closure = Syntax.LambdaForm * (Value list)
 type Heap = Closure array
-type Code = Eval of Syntax.Expr * Enviorment
+type Code = Eval of Syntax.Expr * LocalEnvironment
           | Enter of AddrT
           | ReturnCon of Syntax.Constr * (Value list)
           | ReturnInt of int
@@ -23,7 +24,7 @@ type STGMachine = {
     retstack : Continuation list
     updstack : UpdateFrame list
     heap : Heap
-    globals : Enviorment
+    globals : GlobalEnvironment
     code : Code
 }
 

@@ -143,7 +143,15 @@ let ``one binding`` () = test binds "ab = {} \\u {} -> 1#" |> should equal true
 [<Fact>]
 let ``two bindings`` () = test binds "ab = {} \\u {} -> 1# ; ab = {} \\u {} -> 1#" |> should equal true
 
-
+[<Fact>]
+let ``multpile bindings should be represented in the syntax tree`` () =
+    match run binds """ab = {} \u {} -> 1# ;
+    
+    ab2 = {} \u {} -> 1#""" with
+      | Success(result, _, _) ->
+        printfn "%A" result
+        result.TryFind "ab2" |> Option.isSome |> should equal true
+      | Failure(_, _, _) -> should equal true false
 
 (* Test Input for Vindaloo *)
 
