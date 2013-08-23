@@ -167,13 +167,25 @@ let step machine : STGState =
     | { code = Eval (Syntax.PrimApplE { op = op ; pars = x1::x2::[] }, p) ; globals = g } ->
         match (value p g x1, value p g x2) with
         | (Some (Int i1), Some (Int i2)) ->
-                Running {
+            Running {
                 machine with
                     code = ReturnInt (op i1 i2)
-                }
+            }
         | _ -> Error ("Eval arithmetic operation failed!", machine)
 
-    | _ -> Error ("Eval primitive parameter failed!", machine) //or the machine is finished
+    //5.6 Updating (15) - enter updateable closure
+    | { code = Enter a; heap = h ; updstack = u ; retstack = rs ; argstack = argst} 
+        when Array.length h > a && (match h.[a] with | ({updateable = false}, _) -> true | _ -> false)->
+        match h.[a] with
+        | ({ freeVars = vs ; body = e }, ws) ->
+            Running {
+                machine with
+                    code = Eval (e, List.zip vs ws |> Map.ofList) ;
+                    updstack = {argstack=argst ; retstack=rs; closure=a}::u
+            }
+        | _ -> Error ("Enter updateable closure failed!", machine)
+
+    | _ -> Error ("STG-Machine failed!", machine) //or the machine is finished
 
 let initSTG code =
     let g, _ = Map.fold (fun (g, i) name _ -> (Map.add name i g, i+1))
