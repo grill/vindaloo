@@ -135,8 +135,17 @@ let step machine : STGState =
             }
 
     //5.5 Built in operations (10) - eval primitive parameter
-    | { code = Eval (Syntax.LiteralE k, p)
-    | _ -> Error ("The supplied state is not vaild", machine) //or the machine is finished
+    | { code = Eval (Syntax.ApplE {var = v; pars = [] }, p) }
+        when (match Map.tryFind v p with | Some (Int _) -> true | _ -> false) ->
+        match Map.find v p with
+        | Int x ->
+            Running {
+                machine with
+                    code = ReturnInt x
+            }
+        | _ -> Error ("Eval primitive parameter failed!", machine)
+
+    | _ -> Error ("Eval primitive parameter failed!", machine) //or the machine is finished
 
 let initSTG code =
     let g, _ = Map.fold (fun (g, i) name _ -> (Map.add name i g, i+1))
