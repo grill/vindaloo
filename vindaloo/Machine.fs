@@ -107,7 +107,8 @@ let step machine : STGState =
                 // (8) - default case expression with variable
                 | v::[] ->
                     let a = h.Length
-                    let vs = [1..ws.Length] |> List.map (fun x -> c + string x ) 
+                    let cl = "v" + c
+                    let vs = [1..ws.Length] |> List.map (fun x -> cl + string x ) 
                     let h' =
                         [| ( 
                             { Syntax.freeVars = vs; Syntax.updateable = false; Syntax.parameters = [];
