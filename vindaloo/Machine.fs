@@ -108,7 +108,8 @@ let step machine : STGState =
                 // (8) - default case expression with variable
                 | v::[] ->
                     let a = h.Length
-                    let vs = [1..ws.Length] |> List.map (fun x -> c + string x ) 
+                    let cl = "v" + c
+                    let vs = [1..ws.Length] |> List.map (fun x -> cl + string x ) 
                     let h' =
                         [| ( 
                             { Syntax.freeVars = vs; Syntax.updateable = false; Syntax.parameters = [];
@@ -163,6 +164,28 @@ let step machine : STGState =
             machine with
                 code = Eval (e, p')
          }
+    
+    //5.5 Built in operations (14) - eval arithmetic operation
+    | { code = Eval (Syntax.PrimApplE { op = op ; pars = x1::x2::[] }, p) ; globals = g } ->
+        match (value p g x1, value p g x2) with
+        | (Some (Int i1), Some (Int i2)) ->
+            Running {
+                machine with
+                    code = ReturnInt (op i1 i2)
+            }
+        | _ -> Error ("Eval arithmetic operation failed!", machine)
+
+    //5.6 Updating (15) - enter updateable closure
+    | { code = Enter a; heap = h ; updstack = u ; retstack = rs ; argstack = argst} 
+        when Array.length h > a && (match h.[a] with | ({updateable = true}, _) -> true | _ -> false)->
+        match h.[a] with
+        | ({ freeVars = vs ; body = e }, ws) ->
+            Running {
+                machine with
+                    code = Eval (e, List.zip vs ws |> Map.ofList) ;
+                    updstack = {argstack=argst ; retstack=rs; closure=a}::u
+            }
+        | _ -> Error ("Enter updateable closure failed!", machine)
 
     //5.6 Updating (16) - updating constructors
     | { code = ReturnCon (c, ws) ;
@@ -188,6 +211,29 @@ let step machine : STGState =
         }
 
     | _ -> Error ("Eval primitive parameter failed!", machine) //or the machine is finished
+    //5.6 Updating (17) - not enough arguments to trigger update
+    | { code = Enter a; heap = h ; updstack = {argstack=argstu ; retstack=rsu; closure=au}::u ; retstack = [] ; argstack = argst} 
+        when Array.length h > a &&
+            (match h.[a] with
+            | ({updateable = false ; parameters = xs}, _) ->
+                List.length xs > 0 && List.length argst < List.length xs
+            | _ -> false) ->
+        match h.[a] with
+        | ({ freeVars = vs ; parameters = xs ; body = e }, ws) ->
+            let xs1, xs2 = ListSplit xs (List.length argst) |> Option.get
+            Array.set h au (
+                {freeVars = List.append vs xs1; updateable = false;
+                 parameters = xs2; body = e;}
+            , List.append ws argst) 
+            Running {
+                machine with
+                    code = Enter a ;
+                    argstack = List.append argst argstu ;
+                    retstack = rsu ;
+            }
+        | _ -> Error ("Not enough arguments to trigger update failed!", machine)
+
+    | _ -> Error ("STG-Machine failed!", machine) //or the machine is finished
 
 let initSTG code =
     let g, _ = Map.fold (fun (g, i) name _ -> (Map.add name i g, i+1))
@@ -202,20 +248,3 @@ let initSTG code =
         globals = g
         code = Eval (Syntax.ApplE {var = "main"; pars = []}, Map [])
     }
-
-(* abstract machine *)
-(*let eval code =
-    match (run prog code) with
-    | Success(result, _, _)   ->
-        initSTG result
-    | Failure(errorMsg, _, _) -> printfn "Failure: %s" errorMsg
-*)
-
-(* repl *)
-(*
-let stgmachine =
-    let runmachine = init
-    match System.Console.In.ReadLine() with
-    | null -> p
-    | line -> eval line state
-  *)
