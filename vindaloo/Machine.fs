@@ -101,7 +101,7 @@ let initSTG code =
         argstack = []
         retstack = []
         updstack = []
-        heap = List.toArray h
+        heap = h |> List.rev |> List.toArray
         globals = g
         code = Eval (Syntax.ApplE {var = "main"; pars = []}, Map [])
     }

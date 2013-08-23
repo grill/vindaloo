@@ -7,6 +7,7 @@ open System.Threading
 open Vindaloo.Test.Parser
 open Vindaloo.Parser
 open Vindaloo.Machine
+open Vindaloo.Architecture
 
 (*
 test binds """
@@ -24,22 +25,41 @@ map1 = {} \n {f} ->
 printfn "asfd"
 *)
 
+let printSTG machine =
+    printfn """
+    code = %A
+    globals = %A
+    argstack = %A
+    updatestack = %A
+    returnstack = %A
+    heap size = %i
+    """
+      machine.code
+      machine.globals
+      machine.argstack
+      machine.updstack
+      machine.retstack
+      machine.heap.Length
+
 let debugSTG code =
     let machine = initSTG code
     let rec runstg m = 
         let mstate = step m
         match mstate with
         | Running m' ->
-            printfn "%A" m'
+            printSTG m'
             runstg m'
         | Error (msg, m') ->
             printfn "Machine is dead, last state:"
             printfn "%s" msg
-            printfn "%A" m'
+            printSTG m'
         | Finished _ ->
             printfn "finished"
+    printfn "%A" code
     printfn "%A" machine
+    printSTG machine
     runstg machine
+
 
 
 match run binds """
