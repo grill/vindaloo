@@ -11,7 +11,7 @@ type Code = Eval of Syntax.Expr * LocalEnvironment
           | ReturnCon of Syntax.Constr * (Value list)
           | ReturnInt of int
 
-type Continuation = Syntax.Alts
+type Continuation = Syntax.Alts * LocalEnvironment
 
 type UpdateFrame = {
     argstack : Value list

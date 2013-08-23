@@ -88,7 +88,15 @@ let step machine : STGState =
                     code = Eval (e, p'); 
                     heap = h'
             }
-        | _ -> Error("Let failed!", machine)
+        | _ -> Error("Let(rec) failed!", machine)
+        
+    //5.4 Case expressions and data constructors (4) - case
+    | { code = Eval (Syntax.CaseE {alts = alts; expr = e}, p) ; retstack = rs } ->
+            Running {
+                machine with
+                    code = Eval (e, p);
+                    retstack = (alts, p) :: rs
+            }
 
     | _ -> Error ("The supplied state is not vaild", machine) //or the machine is finished
 
