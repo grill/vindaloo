@@ -222,20 +222,3 @@ let initSTG code =
         globals = g
         code = Eval (Syntax.ApplE {var = "main"; pars = []}, Map [])
     }
-
-(* abstract machine *)
-(*let eval code =
-    match (run prog code) with
-    | Success(result, _, _)   ->
-        initSTG result
-    | Failure(errorMsg, _, _) -> printfn "Failure: %s" errorMsg
-*)
-
-(* repl *)
-(*
-let stgmachine =
-    let runmachine = init
-    match System.Console.In.ReadLine() with
-    | null -> p
-    | line -> eval line state
-  *)
