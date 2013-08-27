@@ -239,6 +239,8 @@ let step machine : STGState =
             }
         | _ -> Error ("Not enough arguments to trigger update failed!", machine)
 
+    | { code = ReturnCon (c, ws); updstack = []; retstack = []; argstack = []; heap = h } ->
+        Finished machine
     | _ -> Error ("STG-Machine failed!", machine) //or the machine is finished
 
 let initSTG code =

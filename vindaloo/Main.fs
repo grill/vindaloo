@@ -41,14 +41,15 @@ let printSTG machine =
       (List.length machine.retstack)
       machine.heap.Length
 
-type Step = Not | Once | Finish
-type Cmds = Heap of int | Upd of int | Run
+type Step = Not | Once | Finish of bool
+type Cmds = Heap of int | Upd of int | Run | RunV
 
 let moreInfo cmd machine =
     let cmdparse =
         (str "heap" >>. ws >>. pint32 |>> Heap)
         <|> (str "upd" >>. ws >>. pint32 |>> Upd)
         <|> (str "run" >>% Run)
+        <|> (str "runv" >>% RunV)
     match run cmdparse cmd with
       | Success(Heap addr, _ ,_ ) ->
             if addr < machine.heap.Length
@@ -59,7 +60,9 @@ let moreInfo cmd machine =
             then printfn "%A" machine.updstack.[addr]; Not
             else printfn "Update stack address out of range"; Not
       | Success(Run, _, _) ->
-            Finish
+            Finish true
+      | Success(RunV, _, _) ->
+            Finish false
       | Failure(_, _, _) ->
             Once
  
@@ -67,31 +70,34 @@ let rec printInfo machine =
     let cmd = Console.ReadLine ()
     match moreInfo cmd machine with
       | Not -> printInfo machine
-      | Once -> true
-      | Finish -> false
+      | Once -> true, false
+      | Finish silent -> false, silent
 
 let debugSTG code =
     let machine = initSTG code
-    let rec runstg mstate do_info = 
+    let rec runstg mstate do_info silent = 
         match mstate with
         | Running m' ->
-            printSTG m'
-            let next_info =
+            if not silent
+            then printSTG m'
+            let next_info, next_silent =
                 if do_info
                 then printInfo m'
-                else false
-            runstg (step m') next_info
+                else false, silent
+            runstg (step m') next_info next_silent
         | Error (msg, m') ->
             printfn "Machine is dead, last state:"
             printfn "%s" msg
             printSTG m'
             printInfo m' |> ignore
-        | Finished _ ->
+        | Finished m' ->
             printfn "finished"
+            printSTG m'
+            printInfo m' |> ignore
     printfn "%A" code
     printfn "%A" machine
     printSTG machine
-    runstg (Running machine) true
+    runstg (Running machine) true false
 
 
 
