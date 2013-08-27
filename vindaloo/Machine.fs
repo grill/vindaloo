@@ -54,10 +54,14 @@ let step machine : STGState =
         | _ -> Error ("Tail call failed", machine)
         
     //5.2 Applications (2) - enter function
-    | { code = Enter addr; heap = h; globals = g; argstack = a } when Array.length h > addr ->
+    | { code = Enter addr; heap = h; globals = g; argstack = a }
+        when Array.length h > addr &&
+        (match h.[addr] with
+            | ({updateable = false ; parameters = xs}, _) ->
+                List.length xs > 0 && List.length a >= List.length xs
+            | _ -> false) ->
         match h.[addr] with
-        | ({ freeVars = vs; updateable = false; parameters = xs; body = e}, wsf)
-            when List.length a >= List.length xs ->
+        | ({ freeVars = vs; parameters = xs; body = e}, wsf) ->
             match List.length xs |> ListSplit a with
             | Some (wsa, a') ->
                 let p = List.zip vs wsf |> List.append (List.zip xs wsa) |> Map.ofList
@@ -189,10 +193,7 @@ let step machine : STGState =
         | _ -> Error ("Enter updateable closure failed!", machine)
 
     //5.6 Updating (16) - updating constructors
-    | { code = ReturnCon (c, ws) ;
-        retstack = [] ;
-        updstack = upd :: updstack' ;
-        heap = h } ->
+    | { code = ReturnCon (c, ws) ; retstack = [] ; updstack = upd :: updstack' ; heap = h } ->
         let vc = "v" + c
         let vs =  [1..ws.Length] |> List.map (fun x -> vc + string x )
         h.[upd.closure] <-
