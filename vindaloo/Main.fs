@@ -30,15 +30,15 @@ let printSTG machine =
     code = %A
     globals = %A
     argstack = %A
-    updatestack = %A
-    returnstack = %A
+    updatestack size = %i
+    returnstack size = %i
     heap size = %i
     """
       machine.code
       machine.globals
       machine.argstack
-      machine.updstack
-      machine.retstack
+      (List.length machine.updstack)
+      (List.length machine.retstack)
       machine.heap.Length
 
 type Step = Not | Once | Finish

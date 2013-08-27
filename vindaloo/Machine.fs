@@ -108,7 +108,7 @@ let step machine : STGState =
         | _ -> Error ("Evaluate Constructor failed!", machine)
     
     //5.4 Case expressions and data constructors (6-8) - choose continuation
-    | { code = ReturnCon (c, ws) ; retstack = (Syntax.AlgebraicAlts alts, p)::_ ; heap = h } ->
+    | { code = ReturnCon (c, ws) ; retstack = (Syntax.AlgebraicAlts alts, p)::rs ; heap = h } ->
         // (6) - normal case expression
         match
             (if (Map.containsKey c alts.cases) then
@@ -139,6 +139,7 @@ let step machine : STGState =
                 machine with
                     code = Eval (e, p') ;
                     heap = h'
+                    retstack = rs
             }
         | None -> Error ("Choose Continuation failed!", machine)
         
@@ -151,14 +152,15 @@ let step machine : STGState =
 
         
     //5.5 Built in operations (11) - case expression with literal
-    | { code = ReturnInt k ; retstack = (Syntax.PrimitiveAlts alts, p)::_ } when Map.containsKey k alts.cases ->
+    | { code = ReturnInt k ; retstack = (Syntax.PrimitiveAlts alts, p)::rs } when Map.containsKey k alts.cases ->
         Running {
             machine with
                 code = Eval (Map.find k alts.cases |> (fun (_,e) -> e), p)
+                retstack = rs
         }
             
     //5.5 Built in operations (12-13) - default case expression with literal
-    | { code = ReturnInt k ; retstack = (Syntax.PrimitiveAlts alts, p)::_ } ->
+    | { code = ReturnInt k ; retstack = (Syntax.PrimitiveAlts alts, p)::rs } ->
         let p', e = 
             match alts.def with
             // (12) - default case expression with vsariable
@@ -168,6 +170,7 @@ let step machine : STGState =
         Running {
             machine with
                 code = Eval (e, p')
+                retstack = rs
          }
     
     //5.5 Built in operations (14) - eval arithmetic operation
