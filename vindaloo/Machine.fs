@@ -212,7 +212,6 @@ let step machine : STGState =
             heap = h
         }
 
-    | _ -> Error ("Eval primitive parameter failed!", machine) //or the machine is finished
     //5.6 Updating (17) - not enough arguments to trigger update
     | { code = Enter a; heap = h ; updstack = {argstack=argstu ; retstack=rsu; closure=au}::u ; retstack = [] ; argstack = argst} 
         when Array.length h > a &&
