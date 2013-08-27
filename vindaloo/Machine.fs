@@ -192,6 +192,8 @@ let step machine : STGState =
                 machine with
                     code = Eval (e, List.zip vs ws |> Map.ofList) ;
                     updstack = {argstack=argst ; retstack=rs; closure=a}::u
+                    retstack = []
+                    argstack = []
             }
         | _ -> Error ("Enter updateable closure failed!", machine)
 

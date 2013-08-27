@@ -42,17 +42,22 @@ let printSTG machine =
       machine.heap.Length
 
 type Step = Not | Once | Finish
-type Cmds = Heap of int | Run
+type Cmds = Heap of int | Upd of int | Run
 
 let moreInfo cmd machine =
     let cmdparse =
         (str "heap" >>. ws >>. pint32 |>> Heap)
+        <|> (str "upd" >>. ws >>. pint32 |>> Upd)
         <|> (str "run" >>% Run)
     match run cmdparse cmd with
       | Success(Heap addr, _ ,_ ) ->
             if addr < machine.heap.Length
             then printfn "%A" machine.heap.[addr]; Not
             else printfn "Heap address out of range"; Not
+      | Success(Upd addr, _ ,_ ) ->
+            if addr < machine.updstack.Length
+            then printfn "%A" machine.updstack.[addr]; Not
+            else printfn "Update stack address out of range"; Not
       | Success(Run, _, _) ->
             Finish
       | Failure(_, _, _) ->
@@ -103,15 +108,15 @@ numbers = {} \n {} ->
 
 sum = {} \n {list, n} ->
     case n {} of
-        0# -> 0#;
+        0# -> MkInt {0#};
         i  -> case list {} of
                 Cons {x, xs} ->
-                    let i1 = {i} \u {} -> -# {i, 1#} in
                     case -# {i, 1#} of
                       i1 -> let next = {xs, i1} \u {} -> sum {xs, i1} in
                             case next {} of
-                                x2 -> +# {x, x2}
-                default -> 0# ;
+                                MkInt {x2} -> case +# {x, x2} of s -> MkInt {s}
+                                default -> MkInt {0#}
+                default -> MkInt {0#} ;
 
 map1 = {} \n {f} ->
        letrec
