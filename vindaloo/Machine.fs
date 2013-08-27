@@ -58,7 +58,7 @@ let step machine : STGState =
         when Array.length h > addr &&
         (match h.[addr] with
             | ({updateable = false ; parameters = xs}, _) ->
-                List.length xs > 0 && List.length a >= List.length xs
+                List.length a >= List.length xs
             | _ -> false) ->
         match h.[addr] with
         | ({ freeVars = vs; parameters = xs; body = e}, wsf) ->
