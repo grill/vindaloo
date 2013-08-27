@@ -96,9 +96,9 @@ main = {} \n {} -> sum {numbers, 10#} ;
 numbers = {} \n {} -> 
     letrec
         count1 = {count1} \n {n} ->
-                    let n1 = {n} \u {} -> +# {1#, n} in
-                    let rest = {count1, n1} \u {} -> count1 {n1} in
-                        Cons {n, rest}
+                    case +# {1#, n} of
+                      n1 -> let rest = {count1, n1} \u {} -> count1 {n1} in
+                            Cons {n, rest}
     in count1 {0#} ;
 
 sum = {} \n {list, n} ->
@@ -107,9 +107,10 @@ sum = {} \n {list, n} ->
         i  -> case list {} of
                 Cons {x, xs} ->
                     let i1 = {i} \u {} -> -# {i, 1#} in
-                    let next = {xs, i1} \u {} -> sum {xs, i1} in
-                    case next {} of
-                      x2 -> +# {x, x2}
+                    case -# {i, 1#} of
+                      i1 -> let next = {xs, i1} \u {} -> sum {xs, i1} in
+                            case next {} of
+                                x2 -> +# {x, x2}
                 default -> 0# ;
 
 map1 = {} \n {f} ->
