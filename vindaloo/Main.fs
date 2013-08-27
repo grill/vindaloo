@@ -50,7 +50,9 @@ let moreInfo cmd machine =
         <|> (str "run" >>% Run)
     match run cmdparse cmd with
       | Success(Heap addr, _ ,_ ) ->
-            printfn "%A" machine.heap.[addr]; Not
+            if addr < machine.heap.Length
+            then printfn "%A" machine.heap.[addr]; Not
+            else printfn "Heap address out of range"; Not
       | Success(Run, _, _) ->
             Finish
       | Failure(_, _, _) ->
@@ -78,6 +80,7 @@ let debugSTG code =
             printfn "Machine is dead, last state:"
             printfn "%s" msg
             printSTG m'
+            printInfo m' |> ignore
         | Finished _ ->
             printfn "finished"
     printfn "%A" code
@@ -88,7 +91,26 @@ let debugSTG code =
 
 
 match run binds """
-main = {} \n {} -> Nil {};
+main = {} \n {} -> sum {numbers, 10#} ;
+
+numbers = {} \n {} -> 
+    letrec
+        count1 = {count1} \n {n} ->
+                    let n1 = {n} \u {} -> +# {1#, n} in
+                    let rest = {count1, n1} \u {} -> count1 {n1} in
+                        Cons {n, rest}
+    in count1 {0#} ;
+
+sum = {} \n {list, n} ->
+    case n {} of
+        0# -> 0#;
+        i  -> case list {} of
+                Cons {x, xs} ->
+                    let i1 = {i} \u {} -> -# {i, 1#} in
+                    let next = {xs, i1} \u {} -> sum {xs, i1} in
+                    case next {} of
+                      x2 -> +# {x, x2}
+                default -> 0# ;
 
 map1 = {} \n {f} ->
        letrec
@@ -102,7 +124,19 @@ map1 = {} \n {f} ->
         in mf {}
     """ with
     | Success(result, _, _) -> result |> Map.map (fun _ v -> (v, [])) |> debugSTG
-    | Failure(_, _, _) -> printfn "fail"
+    | Failure(s, _, _) -> printfn "fail\n%s" s; Console.ReadLine () |> ignore
 
 
-Threading.Thread.Sleep -1
+//Threading.Thread.Sleep -1
+
+(* STG Code notepad
+
+
+mkList = {} \n {n} ->
+       case n {} of
+          MkInt x# -> 
+          
+          
+main = {} \n {} -> Nil {}
+
+ *)

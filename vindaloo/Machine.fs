@@ -30,6 +30,18 @@ let HeapAdd h prhs binds =
 let step machine : STGState =
     match machine with
     
+    //!!!!!!!!!!!!!!!!!!!!!!!! This rule should probably be moved above the (1) rule !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    //5.5 Built in operations (10) - eval literal parameter
+    | { code = Eval (Syntax.ApplE {var = v; pars = [] }, p) }
+        when (match Map.tryFind v p with | Some (Int _) -> true | _ -> false) ->
+        match Map.find v p with
+        | Int x ->
+            Running {
+                machine with
+                    code = ReturnInt x
+            }
+        | _ -> Error ("Eval primitive parameter failed!", machine)
+    
     //5.2 Applications (1) - tail call
     | { code = Eval (Syntax.ApplE {var = f; pars = xs}, p); globals = g; argstack = a } ->
         match (value p g (Syntax.VarA f), OptionListMap p g xs value) with
@@ -47,15 +59,15 @@ let step machine : STGState =
         | ({ freeVars = vs; updateable = false; parameters = xs; body = e}, wsf)
             when List.length a >= List.length xs ->
             match List.length xs |> ListSplit a with
-            | Some (a', wsa) ->
+            | Some (wsa, a') ->
                 let p = List.zip vs wsf |> List.append (List.zip xs wsa) |> Map.ofList
                 Running {
                   machine with
                     code = Eval (e, p); 
                     argstack = a'
                 }
-            | _ -> Error("Enter failed!", machine)
-        | _ -> Error("Enter failed!", machine)
+            | _ -> Error("Enter failed 1!", machine)
+        | _ -> Error("Enter failed 2!", machine)
         
     //5.3 let(rec) Expressions (3) - let | letrec
     | { code = Eval (Syntax.LetE {binds = binds; expr = e}, p) ; heap = h }
@@ -133,17 +145,6 @@ let step machine : STGState =
                 code = ReturnInt (k)
         }
 
-    //!!!!!!!!!!!!!!!!!!!!!!!! This rule should probably be moved above the (1) rule !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-    //5.5 Built in operations (10) - eval literal parameter
-    | { code = Eval (Syntax.ApplE {var = v; pars = [] }, p) }
-        when (match Map.tryFind v p with | Some (Int _) -> true | _ -> false) ->
-        match Map.find v p with
-        | Int x ->
-            Running {
-                machine with
-                    code = ReturnInt x
-            }
-        | _ -> Error ("Eval primitive parameter failed!", machine)
         
     //5.5 Built in operations (11) - case expression with literal
     | { code = ReturnInt k ; retstack = (Syntax.PrimitiveAlts alts, p)::_ } when Map.containsKey k alts.cases ->
