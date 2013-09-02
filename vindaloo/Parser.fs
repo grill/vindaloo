@@ -132,6 +132,13 @@ do exprImpl :=
 //Program: prog --> binds
 let prog = binds
 
+let parse code = 
+    match run prog code with
+        | Success(result, _, _) ->
+            result |> Map.map (fun _ v -> (v, [])) |> Some
+        | Failure(s, _, _) ->
+            printfn "Parsing Failed!\n%s" s ; None
+
 (** Syntax of the STG language **
 
 Program: prog --> binds

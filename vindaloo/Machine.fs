@@ -70,8 +70,7 @@ let step machine : STGState =
                     code = Eval (e, p); 
                     argstack = a'
                 }
-            | _ -> Error("Enter failed 1!", machine)
-        | _ -> Error("Enter failed 2!", machine)
+            | _ -> Error("Enter failed!", machine)
         
     //5.3 let(rec) Expressions (3) - let | letrec
     | { code = Eval (Syntax.LetE {binds = binds; expr = e}, p) ; heap = h }
@@ -195,7 +194,6 @@ let step machine : STGState =
                     retstack = []
                     argstack = []
             }
-        | _ -> Error ("Enter updateable closure failed!", machine)
 
     //5.6 Updating (16) - updating constructors
     | { code = ReturnCon (c, ws) ; retstack = [] ; updstack = upd :: updstack' ; heap = h } ->
@@ -237,7 +235,6 @@ let step machine : STGState =
                     argstack = List.append argst argstu ;
                     retstack = rsu ;
             }
-        | _ -> Error ("Not enough arguments to trigger update failed!", machine)
 
     | { code = ReturnCon (c, ws); updstack = []; retstack = []; argstack = []; heap = h } ->
         Finished machine

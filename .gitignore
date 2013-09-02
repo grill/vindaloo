@@ -1,6 +1,13 @@
 packages/**
 vindaloo/bin/**
 vindaloo/obj/**
+console/bin/**
+console/obj/**
+graphical/bin/**
+graphical/obj/**
+stg-code/bin/**
+stg-code/obj/**
 TestResults/**
 /*.v11.suo
 /*.pdf
+Vindaloo.sln.*

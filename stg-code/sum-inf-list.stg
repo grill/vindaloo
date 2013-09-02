@@ -1,0 +1,32 @@
+main = {} \n {} -> sum {numbers, 10#} ;
+
+numbers = {} \n {} -> 
+    letrec
+        count1 = {count1} \n {n} ->
+                    case +# {1#, n} of
+                      n1 -> let rest = {count1, n1} \u {} -> count1 {n1} in
+                            Cons {n, rest}
+    in count1 {0#} ;
+
+sum = {} \n {list, n} ->
+    case n {} of
+        0# -> MkInt {0#};
+        i  -> case list {} of
+                Cons {x, xs} ->
+                    case -# {i, 1#} of
+                      i1 -> let next = {xs, i1} \u {} -> sum {xs, i1} in
+                            case next {} of
+                                MkInt {x2} -> case +# {x, x2} of s -> MkInt {s}
+                                default -> MkInt {0#}
+                default -> MkInt {0#} ;
+
+map1 = {} \n {f} ->
+       letrec
+         mf = {f,mf} \n {xs} ->
+              case xs {} of
+                Nil {} -> Nil {};
+                Cons {y,ys} -> let fy = {f,y} \u {} -> f {y};
+                                   mfy = {mf,ys} \u {} -> mf {ys}
+                               in Cons {fy,mfy};
+                default -> Nil {}
+        in mf {}
