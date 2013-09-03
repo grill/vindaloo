@@ -24,7 +24,7 @@
     <DocumentationFile>bin\Debug\Graphical.XML</DocumentationFile>
     <Prefer32Bit>true</Prefer32Bit>
     <StartArguments>-d sum-inf-list.stg</StartArguments>
-    <StartWorkingDirectory>C:\Users\gabriel\workspace\vindaloo\stg-code\</StartWorkingDirectory>
+    <StartWorkingDirectory>C:\Users\Alexander\Documents\workspace\stg-code</StartWorkingDirectory>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>

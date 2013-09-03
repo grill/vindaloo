@@ -6,6 +6,7 @@ open System.Windows
 
 open Vindaloo.Gui
 open Vindaloo.Parser
+open Vindaloo.Machine
 
 let helpMessage = """
 vindaloo.exe [-h | [-d] filename]
@@ -18,6 +19,6 @@ vindaloo.exe [-h | [-d] filename]
 
 [<STAThread>]
 do match Array.toList (Environment.GetCommandLineArgs()) |> List.tail with
-    | f::[] ->  Application().Run(mainWindow (File.ReadAllText f))  |> ignore
-    | "-d"::f::[] ->  Application().Run(mainWindow "Debug") |> ignore
-    | _ -> Application().Run(mainWindow helpMessage) |> ignore
+    | f::[] ->  Application().Run(mainWindow (parse (File.ReadAllText f) |> Option.get |> initSTG))  |> ignore
+    | "-d"::f::[] ->  Application().Run(mainWindow (parse (File.ReadAllText f) |> Option.get |> initSTG)) |> ignore
+    | _ -> ignore 0 //Application().Run(mainWindow helpMessage) |> ignore
