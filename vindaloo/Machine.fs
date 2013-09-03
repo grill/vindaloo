@@ -29,8 +29,7 @@ let HeapAdd h prhs binds =
 //references above the rules are to the STG-machine paper
 let step machine : STGState =
     match machine with
-    
-    //!!!!!!!!!!!!!!!!!!!!!!!! This rule should probably be moved above the (1) rule !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
     //5.5 Built in operations (10) - eval literal parameter
     | { code = Eval (Syntax.ApplE {var = v; pars = [] }, p) }
         when (match Map.tryFind v p with | Some (Int _) -> true | _ -> false) ->
@@ -240,10 +239,10 @@ let step machine : STGState =
         Finished machine
     | _ -> Error ("STG-Machine failed!", machine) //or the machine is finished
 
-let initSTG code =
+let initMachine (code : Bindings) =
     let g, _ = Map.fold (fun (g, i) name _ -> (Map.add name i g, i+1))
                         (Map [], 0) code
-    let h = Map.foldBack (fun name addr h -> ( (Map.find name code) :: h))
+    let h = Map.foldBack (fun name addr h -> ( ((Map.find name code), []) :: h))
                         g ([])
     {
         argstack = []
@@ -253,3 +252,14 @@ let initSTG code =
         globals = g
         code = Eval (Syntax.ApplE {var = "main"; pars = []}, Map [])
     }
+
+let extendMachine machine code =
+    match machine with
+    | {heap = heap ; globals = globals } ->
+        let g',_ = Map.fold (fun (g, i) name _ -> (Map.add name i g, i+1)) (globals, Array.length heap) code
+        let h' = Map.foldBack (fun name addr h -> ( ((Map.find name code), []) :: h)) code (List.empty) 
+        {
+            machine with
+                globals = g';
+                heap = Array.append heap (h' |> List.toArray)
+        }

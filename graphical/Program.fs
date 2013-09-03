@@ -11,7 +11,7 @@ let helpMessage = """
 vindaloo.exe [-h | [-d] filename]
 
     Execute a stg-file with filename.
-        
+
 -h...display help
 -d...start debugger"""
 

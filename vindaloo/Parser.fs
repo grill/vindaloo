@@ -135,9 +135,16 @@ let prog = binds
 let parse code = 
     match run prog code with
         | Success(result, _, _) ->
-            result |> Map.map (fun _ v -> (v, [])) |> Some
+            result |> Some
         | Failure(s, _, _) ->
             printfn "Parsing Failed!\n%s" s ; None
+
+let parseAppl code =
+    match run appl code with
+        | Success(result, _, _) ->
+            result |> Some
+        | Failure(s, _, _) ->
+            None
 
 (** Syntax of the STG language **
 

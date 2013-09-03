@@ -82,7 +82,7 @@ let ``primitive alternative has no params`` () = test palt "a {4#} -> 7#" |> sho
 [<Fact>]
 let ``algebraic alt`` () = test aalt "A {} -> 13#" |> should equal true
 [<Fact>]
-let ``another algebraic alt`` () = test aalt "A {7#} -> 13#" |> should equal false
+let ``another algebraic alt can not contain literals in the constr `` () = test aalt "A {7#} -> 13#" |> should equal false
 [<Fact>]
 let ``yet another algebraic alt`` () = test aalt "A {b, c} -> 13#" |> should equal true
 [<Fact>]
@@ -95,9 +95,9 @@ let ``algebraic alternative is not a function`` () = test aalt "a {4#} -> 7#" |>
 [<Fact>]
 let ``algebraic alts`` () = test (galts aalt) "A {} -> 13#; default -> 13#" |> should equal true
 [<Fact>]
-let ``more algebraic alts`` () = test (galts aalt) "A {} -> 13#;B {7#} -> 3#;C {a, b} -> 3#; default -> 13#" |> should equal false
+let ``algebraic alts can not contain literals in the constr `` () = test (galts aalt) "A {} -> 13#;B {7#} -> 3#;C {a, b} -> 3#; default -> 13#" |> should equal false
 [<Fact>]
-let ``more algebraic alts with var default`` () = test (galts aalt) "A {} -> 13#; B {7#} -> 3#; C {a, b} -> 3#; a -> 13#" |> should equal false
+let ``algebraic alts with var default can not contain literals in the constr `` () = test (galts aalt) "A {} -> 13#; B {7#} -> 3#; C {a, b} -> 3#; a -> 13#" |> should equal false
 [<Fact>]
 let ``primitive alts`` () = test (galts palt) "3# -> 3#;\n default -> 13#" |> should equal true
 [<Fact>]
