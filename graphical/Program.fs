@@ -19,6 +19,6 @@ vindaloo.exe [-h | [-d] filename]
 
 [<STAThread>]
 do match Array.toList (Environment.GetCommandLineArgs()) |> List.tail with
-    | f::[] ->  Application().Run(mainWindow (parse (File.ReadAllText f) |> Option.get |> initSTG))  |> ignore
-    | "-d"::f::[] ->  Application().Run(mainWindow (parse (File.ReadAllText f) |> Option.get |> initSTG)) |> ignore
+    | f::[] ->  Application().Run(mainWindow (parse (File.ReadAllText f) |> Option.get |> initMachine))  |> ignore
+    | "-d"::f::[] ->  Application().Run(mainWindow (parse (File.ReadAllText f) |> Option.get |> initMachine)) |> ignore
     | _ -> ignore 0 //Application().Run(mainWindow helpMessage) |> ignore

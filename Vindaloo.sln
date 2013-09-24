@@ -18,14 +18,14 @@ Global
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
 		{A28975DD-3638-4C09-B5C9-10BB2DED2ECF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{A28975DD-3638-4C09-B5C9-10BB2DED2ECF}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{A28975DD-3638-4C09-B5C9-10BB2DED2ECF}.Interpreter|Any CPU.ActiveCfg = Interpreter|Any CPU
-		{A28975DD-3638-4C09-B5C9-10BB2DED2ECF}.Interpreter|Any CPU.Build.0 = Interpreter|Any CPU
+		{A28975DD-3638-4C09-B5C9-10BB2DED2ECF}.Interpreter|Any CPU.ActiveCfg = Debug Console|Any CPU
+		{A28975DD-3638-4C09-B5C9-10BB2DED2ECF}.Interpreter|Any CPU.Build.0 = Debug Console|Any CPU
 		{A28975DD-3638-4C09-B5C9-10BB2DED2ECF}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{A28975DD-3638-4C09-B5C9-10BB2DED2ECF}.Release|Any CPU.Build.0 = Release|Any CPU
 		{8DA93FFF-311B-4A3A-9634-318C555B2A87}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{8DA93FFF-311B-4A3A-9634-318C555B2A87}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{8DA93FFF-311B-4A3A-9634-318C555B2A87}.Interpreter|Any CPU.ActiveCfg = Interpreter|Any CPU
-		{8DA93FFF-311B-4A3A-9634-318C555B2A87}.Interpreter|Any CPU.Build.0 = Interpreter|Any CPU
+		{8DA93FFF-311B-4A3A-9634-318C555B2A87}.Interpreter|Any CPU.ActiveCfg = Release|Any CPU
+		{8DA93FFF-311B-4A3A-9634-318C555B2A87}.Interpreter|Any CPU.Build.0 = Release|Any CPU
 		{8DA93FFF-311B-4A3A-9634-318C555B2A87}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{8DA93FFF-311B-4A3A-9634-318C555B2A87}.Release|Any CPU.Build.0 = Release|Any CPU
 		{4292D8C1-65A4-411F-84FF-74C3BB394AD6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
@@ -36,8 +36,8 @@ Global
 		{4292D8C1-65A4-411F-84FF-74C3BB394AD6}.Release|Any CPU.Build.0 = Release|Any CPU
 		{63C1541A-D303-48FA-BDA9-4E530BB22E6C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{63C1541A-D303-48FA-BDA9-4E530BB22E6C}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{63C1541A-D303-48FA-BDA9-4E530BB22E6C}.Interpreter|Any CPU.ActiveCfg = Interpreter|Any CPU
-		{63C1541A-D303-48FA-BDA9-4E530BB22E6C}.Interpreter|Any CPU.Build.0 = Interpreter|Any CPU
+		{63C1541A-D303-48FA-BDA9-4E530BB22E6C}.Interpreter|Any CPU.ActiveCfg = Release|Any CPU
+		{63C1541A-D303-48FA-BDA9-4E530BB22E6C}.Interpreter|Any CPU.Build.0 = Release|Any CPU
 		{63C1541A-D303-48FA-BDA9-4E530BB22E6C}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{63C1541A-D303-48FA-BDA9-4E530BB22E6C}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
